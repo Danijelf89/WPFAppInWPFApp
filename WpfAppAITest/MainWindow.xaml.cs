@@ -1,4 +1,5 @@
-﻿using System.Diagnostics;
+﻿using System.ComponentModel;
+using System.Diagnostics;
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Windows;
@@ -44,7 +45,6 @@ namespace WpfAppAITest
 
         const int GWL_STYLE = -16;
         const int WS_CHILD = 0x40000000;
-        const int SW_HIDE = 0;
         const int SW_SHOW = 5;
 
         private Process _childProcess;
@@ -59,11 +59,13 @@ namespace WpfAppAITest
 
         private async void LoadExternalApplication()
         {
-            Window1 loadingWindow = new Window1();
-            loadingWindow.Owner = this;
+            LoadingWindow loadingWindow = new LoadingWindow
+            {
+                Owner = this
+            };
             loadingWindow.Show();
 
-            string exePath = @"C:\Users\CD-LP000026\Desktop\Workshop\WPF appis\TestPokretanaj DrugeAppUNutarWPF-a\WpfAppAITest\bin\Debug\net8.0-windows\WpfAppAITest.exe";
+            var exePath = @"C:\Users\CD-LP000026\Desktop\Workshop\WPF appis\TestPokretanaj DrugeAppUNutarWPF-a\WpfAppAITest\bin\Debug\net8.0-windows\WpfAppAITest.exe";
 
             _childProcess = new Process
             {
@@ -74,8 +76,6 @@ namespace WpfAppAITest
                 }
             };
             _childProcess.Start();
-
-            //await Task.Delay(1000);
 
             for (int i = 0; i < 10; i++)
             {
@@ -101,7 +101,6 @@ namespace WpfAppAITest
 
                 ShowWindow(_childHandle, SW_SHOW);
 
-                // 🔹 2. Zatvori modalni prozor kada je aplikacija spremna
                 loadingWindow.Close();
             });
         }
@@ -122,6 +121,11 @@ namespace WpfAppAITest
         private void ButtonBase_OnClick(object sender, RoutedEventArgs e)
         {
             LoadExternalApplication();
+        }
+
+        private void MainWindow_OnClosing(object? sender, CancelEventArgs e)
+        {
+            LeftGrid.SizeChanged -= LeftGrid_SizeChanged;
         }
     }
 }

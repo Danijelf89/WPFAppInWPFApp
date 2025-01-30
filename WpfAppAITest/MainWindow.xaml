@@ -5,6 +5,7 @@
         WindowState="Maximized"
         WindowStartupLocation="CenterScreen"
         ResizeMode="NoResize"
+        Closing="MainWindow_OnClosing"
         >
     <Grid>
         <Grid.ColumnDefinitions>
