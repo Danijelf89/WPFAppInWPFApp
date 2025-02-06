@@ -17,6 +17,14 @@ using System.Runtime.InteropServices;
 using System.Threading;
 using System.Windows.Threading;
 using MessageBox = System.Windows.Forms.MessageBox;
+using System.Runtime.CompilerServices;
+using System.IO;
+using static System.Windows.Forms.VisualStyles.VisualStyleElement.TextBox;
+using Point = System.Windows.Point;
+using System;
+using WpfAppAITest.Helpers;
+using WpfAppAITest.ViewModels;
+using Panel = System.Windows.Controls.Panel;
 
 namespace WpfAppAITest
 {
@@ -25,107 +33,35 @@ namespace WpfAppAITest
     /// </summary>
     public partial class MainWindow : Window
     {
-        [DllImport("user32.dll")]
-        static extern IntPtr SetParent(IntPtr hWndChild, IntPtr hWndNewParent);
-
-        [DllImport("user32.dll", SetLastError = true)]
-        static extern int SetWindowLong(IntPtr hWnd, int nIndex, int dwNewLong);
-
-        [DllImport("user32.dll", SetLastError = true)]
-        static extern int GetWindowLong(IntPtr hWnd, int nIndex);
-
-        [DllImport("user32.dll", SetLastError = true)]
-        static extern bool MoveWindow(IntPtr hWnd, int X, int Y, int nWidth, int nHeight, bool bRepaint);
-
-        [DllImport("user32.dll", SetLastError = true)]
-        static extern bool ShowWindow(IntPtr hWnd, int nCmdShow);
-
-        [DllImport("user32.dll")]
-        static extern IntPtr FindWindow(string lpClassName, string lpWindowName);
-
-        const int GWL_STYLE = -16;
-        const int WS_CHILD = 0x40000000;
-        const int SW_SHOW = 5;
-
-        private Process _childProcess;
-        private IntPtr _childHandle = IntPtr.Zero;
-
         public MainWindow()
         {
             InitializeComponent();
+
+            var dataContext = new MainWindowViewModel(this);
+
+            DataContext = dataContext;
+
             LeftGrid.SizeChanged += LeftGrid_SizeChanged;
-        }
-
-
-        private async void LoadExternalApplication()
-        {
-            LoadingWindow loadingWindow = new LoadingWindow
-            {
-                Owner = this
-            };
-            loadingWindow.Show();
-
-            var exePath = @"C:\Users\CD-LP000026\Desktop\Workshop\WPF appis\TestPokretanaj DrugeAppUNutarWPF-a\WpfAppAITest\bin\Debug\net8.0-windows\WpfAppAITest.exe";
-
-            _childProcess = new Process
-            {
-                StartInfo = new ProcessStartInfo
-                {
-                    FileName = exePath,
-                    WindowStyle = ProcessWindowStyle.Hidden
-                }
-            };
-            _childProcess.Start();
-
-            for (int i = 0; i < 10; i++)
-            {
-                _childHandle = _childProcess.MainWindowHandle;
-                if (_childHandle != IntPtr.Zero) break;
-                await Task.Delay(300);
-            }
-
-            if (_childHandle == IntPtr.Zero)
-            {
-                MessageBox.Show("Neuspešno dobijanje handle-a prozora aplikacije.");
-                return;
-            }
-
-            Dispatcher.Invoke(() =>
-            {
-                SetParent(_childHandle, new WindowInteropHelper(this).Handle);
-
-                int style = GetWindowLong(_childHandle, GWL_STYLE);
-                SetWindowLong(_childHandle, GWL_STYLE, style | WS_CHILD);
-
-                ResizeEmbeddedApp();
-
-                ShowWindow(_childHandle, SW_SHOW);
-
-                loadingWindow.Close();
-            });
         }
 
         private void LeftGrid_SizeChanged(object sender, SizeChangedEventArgs e)
         {
-            ResizeEmbeddedApp();
+            ((MainWindowViewModel)DataContext).ResizeEmbeddedApp();
         }
 
-        private void ResizeEmbeddedApp()
+        private void LoadApplication(object sender, RoutedEventArgs e)
         {
-            if (_childHandle != IntPtr.Zero)
-            {
-                MoveWindow(_childHandle, 0, 0, 1000, 1000, true);
-            }
-        }
-
-        private void ButtonBase_OnClick(object sender, RoutedEventArgs e)
-        {
-            LoadExternalApplication();
+            ((MainWindowViewModel)DataContext).LoadExternalApplication();
         }
 
         private void MainWindow_OnClosing(object? sender, CancelEventArgs e)
         {
             LeftGrid.SizeChanged -= LeftGrid_SizeChanged;
+        }
+
+        private void TakaeScreenShot(object sender, RoutedEventArgs e)
+        {
+            ScreenShotHelper.CaptureGridAndSetAsBackground(LeftGrid, OvajZaSliku);
         }
     }
 }
