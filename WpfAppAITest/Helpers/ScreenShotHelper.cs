@@ -8,6 +8,7 @@ using System.Windows.Interop;
 using System.Windows.Media.Imaging;
 using System.Windows.Media;
 using System.Windows;
+using Application = System.Windows.Application;
 using Point = System.Windows.Point;
 
 
@@ -71,18 +72,42 @@ namespace WpfAppAITest.Helpers
 
         public static void CaptureGridAndSetAsBackground(System.Windows.Controls.Panel source, System.Windows.Controls.Panel target)
         {
-            // Dobijanje apsolutne pozicije Grid1 na ekranu
-            Point screenPos = source.PointToScreen(new Point(0, 0));
-            Rect captureRegion = new Rect(screenPos.X, screenPos.Y, source.ActualWidth,source.ActualHeight);
+            // Use BeginInvoke to ensure the UI thread is used for UI updates
+            
+                // Dobijanje apsolutne pozicije Grid1 na ekranu
+                Point screenPos = source.PointToScreen(new Point(0, 0));
+                Rect captureRegion = new Rect(screenPos.X, screenPos.Y, 750, 550);
 
-            // Uhvati screenshot tog regiona
-            BitmapSource screenshot = CaptureRegion(captureRegion);
+                // Uhvati screenshot tog regiona
+                BitmapSource screenshot = CaptureRegion(captureRegion);
+
+                //BitmapSource resizedScreenshot = ResizeBitmap(screenshot, 700, 500);
 
             // Postavi kao Background za Grid2
             ImageBrush brush = new ImageBrush();
-            brush.ImageSource = screenshot;
-            brush.Stretch = Stretch.Uniform;
-            target.Background = brush;
+                brush.ImageSource = screenshot;
+                brush.Stretch = Stretch.Fill;
+                
+                target.Background = brush;
+
+           
+
         }
+
+
+        private static BitmapSource ResizeBitmap(BitmapSource source, int width, int height)
+        {
+            RenderTargetBitmap resizedBitmap = new RenderTargetBitmap(width, height, 96, 96, PixelFormats.Pbgra32);
+
+            DrawingVisual drawingVisual = new DrawingVisual();
+            using (DrawingContext context = drawingVisual.RenderOpen())
+            {
+                context.DrawImage(source, new Rect(0, 0, width, height));
+            }
+            resizedBitmap.Render(drawingVisual);
+
+            return resizedBitmap;
+        }
+
     }
 }

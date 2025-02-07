@@ -6,9 +6,13 @@ using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows;
+using System.Windows.Forms.VisualStyles;
 using System.Windows.Interop;
 using System.Windows.Threading;
+using WpfAppAITest.Helpers;
 using MessageBox = System.Windows.Forms.MessageBox;
+using Panel = System.Windows.Controls.Panel;
+using Point = System.Windows.Point;
 
 namespace WpfAppAITest.ViewModels
 {
@@ -40,11 +44,13 @@ namespace WpfAppAITest.ViewModels
         private IntPtr _childHandle = IntPtr.Zero;
 
         private Window _mainWindow;
+        private Panel _leftGrid;
 
 
-        public MainWindowViewModel(Window mainWindow)
+        public MainWindowViewModel(Window mainWindow, Panel leftGrid)
         {
             _mainWindow = mainWindow;
+            _leftGrid = leftGrid;
         }
 
 
@@ -95,9 +101,20 @@ namespace WpfAppAITest.ViewModels
 
         public void ResizeEmbeddedApp()
         {
-            if (_childHandle != IntPtr.Zero)
+            if (_childHandle != IntPtr.Zero && _leftGrid != null)
             {
-                MoveWindow(_childHandle, 0, 0, 800, 700, true);
+                // Dobij apsolutne koordinate LeftGrid-a na ekranu
+                Point screenPos = _leftGrid.PointToScreen(new Point(0, 0));
+
+                // Dobij trenutnu veličinu LeftGrid-a
+                int width = (int)_leftGrid.ActualWidth;
+                int height = (int)_leftGrid.ActualHeight;
+
+                if (width > 0 && height > 0)
+                {
+                    // Postavi poziciju i veličinu prozora na osnovu LeftGrid-a
+                    MoveWindow(_childHandle, (int)screenPos.X, (int)screenPos.Y, width, height, true);
+                }
             }
         }
     }

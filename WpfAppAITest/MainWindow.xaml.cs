@@ -37,7 +37,7 @@ namespace WpfAppAITest
         {
             InitializeComponent();
 
-            var dataContext = new MainWindowViewModel(this);
+            var dataContext = new MainWindowViewModel(this,LeftGrid);
 
             DataContext = dataContext;
 
