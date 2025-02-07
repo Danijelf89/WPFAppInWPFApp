@@ -26,30 +26,20 @@ namespace WpfAppAITest.ViewModels
         static extern IntPtr SetParent(IntPtr hWndChild, IntPtr hWndNewParent);
 
         [DllImport("user32.dll", SetLastError = true)]
-        static extern int SetWindowLong(IntPtr hWnd, int nIndex, int dwNewLong);
-
-        [DllImport("user32.dll", SetLastError = true)]
-        static extern int GetWindowLong(IntPtr hWnd, int nIndex);
-
-        [DllImport("user32.dll", SetLastError = true)]
         static extern bool MoveWindow(IntPtr hWnd, int X, int Y, int nWidth, int nHeight, bool bRepaint);
 
         [DllImport("user32.dll", SetLastError = true)]
         static extern bool ShowWindow(IntPtr hWnd, int nCmdShow);
 
-        [DllImport("user32.dll")]
-        static extern IntPtr FindWindow(string lpClassName, string lpWindowName);
 
-        const int GWL_STYLE = -16;
-        const int WS_CHILD = 0x40000000;
-        const int SW_SHOW = 5;
+        private const int SW_SHOW = 5;
 
         private Process _childProcess;
         private IntPtr _childHandle = IntPtr.Zero;
 
-        private Window _mainWindow;
-        private Panel _leftGrid;
-        private Canvas _canvas;
+        private readonly Window _mainWindow;
+        private readonly Panel _leftGrid;
+        private readonly Canvas _canvas;
 
 
         public MainWindowViewModel(Window mainWindow, Panel leftGrid, Canvas canvas)
@@ -68,7 +58,7 @@ namespace WpfAppAITest.ViewModels
             };
             loadingWindow.Show();
 
-            var exePath = @"C:\Users\CD-LP000026\Desktop\Workshop\WPF appis\TestPokretanaj DrugeAppUNutarWPF-a\WpfAppAITest\bin\Debug\net8.0-windows\WpfAppAITest.exe";
+            var exePath = @"C:\Users\CD-LP000026\Desktop\Test\WPFAppInWPFApp\WpfAppAITest\bin\Debug\net8.0-windows\WpfAppAITest.exe";
 
             _childProcess = new Process
             {
@@ -94,8 +84,11 @@ namespace WpfAppAITest.ViewModels
             }
             SetParent(_childHandle, new WindowInteropHelper(_mainWindow).Handle);
 
-            int style = GetWindowLong(_childHandle, GWL_STYLE);
-            SetWindowLong(_childHandle, GWL_STYLE, style | WS_CHILD);
+            // Dohvatite trenutni stil prozora
+            int style = NativeMethods.GetWindowLong(_childHandle, NativeMethods.GWL_STYLE);
+
+            // Promenite stil prozora
+            NativeMethods.SetWindowLong(_childHandle, NativeMethods.GWL_STYLE, style & ~NativeMethods.WS_CAPTION); // Uklonite WS_CAPTION
 
             ResizeEmbeddedApp();
 
@@ -182,6 +175,7 @@ namespace WpfAppAITest.ViewModels
                         X2 = _lineEndPoint.X,
                         Y2 = _lineEndPoint.Y,
                         Stroke = System.Windows.Media.Brushes.Black,
+                        StrokeEndLineCap = PenLineCap.Triangle,
                         StrokeThickness = 2
                     };
 
@@ -189,7 +183,7 @@ namespace WpfAppAITest.ViewModels
                     _canvas.Children.Add(line);
 
                     // Nacrtaj vrh strelice
-                    DrawArrowHead(line.X1, line.Y1, line.X2, line.Y2);
+                    DrawArrowHead(_lineStartPoint, _lineEndPoint);
 
                     // Resetuj tačke nakon crtanja strelice
                     _lineStartPoint.X = 0;
@@ -205,37 +199,29 @@ namespace WpfAppAITest.ViewModels
             }
         }
 
-
-        private void DrawArrowHead(double startX, double startY, double endX, double endY)
+        private void DrawArrowHead(Point start, Point end)
         {
-            double arrowHeadLength = 10; // Dužina vrha strelice
-            double arrowHeadAngle = Math.PI / 6; // Ugao vrha strelice (u radijanima)
+            // Calculate the direction of the line
+            Vector direction = end - start;
+            direction.Normalize();  // Normalize to get a unit vector
 
-            // Izračunaj ugao linije
-            double angle = Math.Atan2(endY - startY, endX - startX);
+            // Define the size of the arrowhead
+            double arrowSize = 10;
 
-            // Izračunaj tačke za vrh strelice
-            Point arrowPoint1 = new Point(endX - arrowHeadLength * Math.Cos(angle - arrowHeadAngle),
-                endY - arrowHeadLength * Math.Sin(angle - arrowHeadAngle));
-            Point arrowPoint2 = new Point(endX - arrowHeadLength * Math.Cos(angle + arrowHeadAngle),
-                endY - arrowHeadLength * Math.Sin(angle + arrowHeadAngle));
+            // Calculate the points of the arrowhead (triangle)
+            Point arrowPoint1 = end - direction * arrowSize + new Vector(-direction.Y, direction.X) * 5;
+            Point arrowPoint2 = end - direction * arrowSize + new Vector(direction.Y, -direction.X) * 5;
 
-            // Treća tačka koja se nalazi na suprotnom kraju od vrha
-            Point arrowPoint3 = new Point(endX - arrowHeadLength * 0.5 * Math.Cos(angle),
-                endY - arrowHeadLength * 0.5 * Math.Sin(angle));
-
-            // Nacrtaj vrh strelice sa tri linije
-            Polyline arrowHead = new Polyline
+            // Create the Polygon for the arrowhead (triangle)
+            Polygon arrowhead = new Polygon
             {
-                Points = new PointCollection { new Point(endX, endY), arrowPoint1, arrowPoint3, arrowPoint2 },
-                Stroke = System.Windows.Media.Brushes.Black,
-                StrokeThickness = 2
+                Points = new PointCollection { arrowPoint1, end, arrowPoint2 },
+                Fill = System.Windows.Media.Brushes.Black
             };
 
-            // Dodaj vrh strelice na Canvas
-            _canvas.Children.Add(arrowHead);
+            // Add the arrowhead to the Canvas
+            _canvas.Children.Add(arrowhead);
         }
-
 
         private bool _isLineDrawing;
 
@@ -290,6 +276,22 @@ namespace WpfAppAITest.ViewModels
 
                 OnPropertyChanged(nameof(IsRactangeDrawing));
             }
+        }
+
+
+        public static class NativeMethods // Promenili smo iz 'internal' u 'public'
+        {
+            // Za rad sa stilovima prozora
+            public const int GWL_STYLE = -16;
+            public const int WS_CAPTION = 0x00C00000;
+
+            // P/Invoke za GetWindowLong (dohvatanje stila prozora)
+            [DllImport("user32.dll", SetLastError = true)]
+            public static extern int GetWindowLong(IntPtr hWnd, int nIndex);
+
+            // P/Invoke za SetWindowLong (postavljanje stila prozora)
+            [DllImport("user32.dll", SetLastError = true)]
+            public static extern int SetWindowLong(IntPtr hWnd, int nIndex, int dwNewLong);
         }
     }
 }
