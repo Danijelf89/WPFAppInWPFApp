@@ -37,7 +37,7 @@ namespace WpfAppAITest
         {
             InitializeComponent();
 
-            var dataContext = new MainWindowViewModel(this,LeftGrid);
+            var dataContext = new MainWindowViewModel(this,LeftGrid, OvajZaSliku);
 
             DataContext = dataContext;
 
@@ -62,6 +62,11 @@ namespace WpfAppAITest
         private void TakaeScreenShot(object sender, RoutedEventArgs e)
         {
             ScreenShotHelper.CaptureGridAndSetAsBackground(LeftGrid, OvajZaSliku);
+        }
+
+        private void OvajZaSliku_OnMouseDown(object sender, MouseButtonEventArgs e)
+        {
+            ((MainWindowViewModel)DataContext).DrawElement(sender, e);
         }
     }
 }

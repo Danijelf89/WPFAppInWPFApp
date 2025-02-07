@@ -24,9 +24,15 @@
 
         <Border Grid.Column="2" Grid.Row="0" BorderBrush="Black" BorderThickness="1" CornerRadius="2" Margin="5">
         <StackPanel  HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Margin="5">
-            <Canvas Name="OvajZaSliku" Width="700" Height="400" ></Canvas>
+            <ToolBar Margin="5" HorizontalContentAlignment="Center" HorizontalAlignment="Stretch">
+                <ToggleButton Content="Linija" Width="100" Height="40" Margin="5"   IsChecked="{Binding IsLineDrawing, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
+                    <ToggleButton Content="Srelica" Width="100" Height="40" Margin="5"   IsChecked="{Binding IsArrowDrawing, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
+                    <ToggleButton Content="Kvadrat" Width="100" Height="40" Margin="5"   IsChecked="{Binding IsRactangeDrawing, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
+            </ToolBar>
+
+            <Canvas Name="OvajZaSliku" Width="700" Height="400" MouseDown="OvajZaSliku_OnMouseDown"></Canvas>
             <TextBlock HorizontalAlignment="Center" Margin="0,2,0,2">Opis slike</TextBlock>
-            <TextBox Width="700" Height="500" Margin="0,2,0,2" HorizontalScrollBarVisibility="Auto" TextWrapping="Wrap" AcceptsReturn="True"></TextBox>
+            <TextBox Width="700" Height="300" Margin="0,2,0,2" HorizontalScrollBarVisibility="Auto" TextWrapping="Wrap" AcceptsReturn="True"></TextBox>
         </StackPanel>
         </Border>
 
