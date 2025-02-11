@@ -10,6 +10,7 @@ using System.Windows.Media;
 using System.Windows;
 using Application = System.Windows.Application;
 using Point = System.Windows.Point;
+using System.Windows.Forms.Integration;
 
 
 namespace WpfAppAITest.Helpers
@@ -70,7 +71,7 @@ namespace WpfAppAITest.Helpers
             return bmpSource;
         }
 
-        public static void CaptureGridAndSetAsBackground(System.Windows.Controls.Panel source, System.Windows.Controls.Panel target)
+        public static void CaptureGridAndSetAsBackground(WindowsFormsHost source, System.Windows.Controls.Panel target)
         {
             // Use BeginInvoke to ensure the UI thread is used for UI updates
             

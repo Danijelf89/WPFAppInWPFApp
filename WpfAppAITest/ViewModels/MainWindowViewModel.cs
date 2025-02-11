@@ -7,6 +7,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Forms.Integration;
 using System.Windows.Forms.VisualStyles;
 using System.Windows.Input;
 using System.Windows.Interop;
@@ -38,27 +39,33 @@ namespace WpfAppAITest.ViewModels
         private IntPtr _childHandle = IntPtr.Zero;
 
         private readonly Window _mainWindow;
-        private readonly Panel _leftGrid;
+        //private readonly Panel _leftGrid;
         private readonly Canvas _canvas;
+        private WindowsFormsHost _winFormsHost;
+        private System.Windows.Forms.Panel _winFormsPanel;
 
 
-        public MainWindowViewModel(Window mainWindow, Panel leftGrid, Canvas canvas)
+        public MainWindowViewModel(Window mainWindow, Canvas canvas, WindowsFormsHost winFormsHost)
         {
             _mainWindow = mainWindow;
-            _leftGrid = leftGrid;
+            //_leftGrid = leftGrid;
             _canvas = canvas;
+            _winFormsHost = winFormsHost;
+
+
+            _winFormsPanel = new System.Windows.Forms.Panel
+            {
+                //Dock = DockStyle.
+            };
+
+            // Dodaj panel u WindowsFormsHost
+            _winFormsHost.Child = _winFormsPanel;
         }
 
 
         public async void LoadExternalApplication()
         {
-            LoadingWindow loadingWindow = new LoadingWindow
-            {
-                Owner = _mainWindow
-            };
-            loadingWindow.Show();
-
-            var exePath = @"C:\Users\CD-LP000026\Desktop\Test\WPFAppInWPFApp\WpfAppAITest\bin\Debug\net8.0-windows\WpfAppAITest.exe";
+            var exePath = @"C:\Users\CD-LP000026\Desktop\Workshop\WPF appis\DPiTest\bin\Debug\net8.0-windows\DPiTest.exe";
 
             _childProcess = new Process
             {
@@ -72,9 +79,10 @@ namespace WpfAppAITest.ViewModels
 
             for (int i = 0; i < 10; i++)
             {
+                _childProcess.WaitForInputIdle();
                 _childHandle = _childProcess.MainWindowHandle;
                 if (_childHandle != IntPtr.Zero) break;
-                await Task.Delay(300);
+                await Task.Delay(200);
             }
 
             if (_childHandle == IntPtr.Zero)
@@ -82,37 +90,31 @@ namespace WpfAppAITest.ViewModels
                 MessageBox.Show("Neuspešno dobijanje handle-a prozora aplikacije.");
                 return;
             }
-            SetParent(_childHandle, new WindowInteropHelper(_mainWindow).Handle);
 
-            // Dohvatite trenutni stil prozora
+            // Postavljamo eksternu aplikaciju kao child od WinForms Panel-a
+            SetParent(_childHandle, _winFormsPanel.Handle);
+
+            // Uklanjamo naslovnu traku prozora
             int style = NativeMethods.GetWindowLong(_childHandle, NativeMethods.GWL_STYLE);
+            NativeMethods.SetWindowLong(_childHandle, NativeMethods.GWL_STYLE, style & ~NativeMethods.WS_CAPTION);
 
-            // Promenite stil prozora
-            NativeMethods.SetWindowLong(_childHandle, NativeMethods.GWL_STYLE, style & ~NativeMethods.WS_CAPTION); // Uklonite WS_CAPTION
-
+            // Postavimo veličinu aplikacije na veličinu panela
             ResizeEmbeddedApp();
 
             ShowWindow(_childHandle, SW_SHOW);
-
-            loadingWindow.Close();
-            
         }
 
         public void ResizeEmbeddedApp()
         {
-            if (_childHandle != IntPtr.Zero && _leftGrid != null)
+            if (_childHandle != IntPtr.Zero && _winFormsPanel != null)
             {
-                // Dobij apsolutne koordinate LeftGrid-a na ekranu
-                Point screenPos = _leftGrid.PointToScreen(new Point(0, 0));
-
-                // Dobij trenutnu veličinu LeftGrid-a
-                int width = (int)_leftGrid.ActualWidth;
-                int height = (int)_leftGrid.ActualHeight;
+                int width = _winFormsPanel.ClientSize.Width;
+                int height = _winFormsPanel.ClientSize.Height;
 
                 if (width > 0 && height > 0)
                 {
-                    // Postavi poziciju i veličinu prozora na osnovu LeftGrid-a
-                    MoveWindow(_childHandle, (int)screenPos.X, (int)screenPos.Y, width, height, true);
+                    MoveWindow(_childHandle, 0, 0, width, height, true);
+                    _winFormsPanel.Invalidate();
                 }
             }
         }

@@ -35,13 +35,15 @@ namespace WpfAppAITest
     {
         public MainWindow()
         {
+            
+
             InitializeComponent();
 
-            var dataContext = new MainWindowViewModel(this,LeftGrid, OvajZaSliku);
+            var dataContext = new MainWindowViewModel(this, OvajZaSliku, Host);
 
             DataContext = dataContext;
 
-            LeftGrid.SizeChanged += LeftGrid_SizeChanged;
+            Host.SizeChanged += LeftGrid_SizeChanged;
         }
 
         private void LeftGrid_SizeChanged(object sender, SizeChangedEventArgs e)
@@ -56,12 +58,12 @@ namespace WpfAppAITest
 
         private void MainWindow_OnClosing(object? sender, CancelEventArgs e)
         {
-            LeftGrid.SizeChanged -= LeftGrid_SizeChanged;
+            Host.SizeChanged -= LeftGrid_SizeChanged;
         }
 
         private void TakaeScreenShot(object sender, RoutedEventArgs e)
         {
-            ScreenShotHelper.CaptureGridAndSetAsBackground(LeftGrid, OvajZaSliku);
+            ScreenShotHelper.CaptureGridAndSetAsBackground(Host, OvajZaSliku);
         }
 
         private void OvajZaSliku_OnMouseDown(object sender, MouseButtonEventArgs e)
