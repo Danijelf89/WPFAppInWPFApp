@@ -13,41 +13,55 @@
             <ColumnDefinition Width="20"/>
             <ColumnDefinition Width="*"/>
         </Grid.ColumnDefinitions>
-
         <Grid.RowDefinitions>
             <RowDefinition Height="*"/>
-            <RowDefinition Height="100"/>
         </Grid.RowDefinitions>
 
 
-        <WindowsFormsHost Grid.Column="0" Grid.Row="0"  Name="Host" Width="700" Height="500">
-        </WindowsFormsHost>
+        <StackPanel Grid.Row="0" Grid.Column="0" Margin="5">
+            <ToolBar Margin="5" HorizontalContentAlignment="Center" HorizontalAlignment="Stretch" Grid.Row="0">
+                <Button  ToolTip="Startuj embeded aplikaciju"  Margin="5" HorizontalAlignment="Right" Command="{Binding LoadAppCommand}">
+                    <Image Source="{StaticResource imgStartApp}" Width="25" Height="25"></Image>
+                </Button>
+                <Button ToolTip="Uhvati screenshot" Margin="5" HorizontalAlignment="Right" Command="{Binding AddScreenshot}">
+                    <Image Source="{StaticResource imgPhoto}" Width="25" Height="25"></Image>
+                </Button>
+                <Button  Margin="0,5,5,5" ToolTip="Ugasi embeded aplikaciju"  HorizontalAlignment="Right" Command="{Binding DeleteAppCommand}">
+                    <Image Source="{StaticResource imgShutDown}" Width="25" Height="25"></Image>
+                </Button>
+            </ToolBar>
 
-        <Border Grid.Column="2" Grid.Row="0" BorderBrush="Black" BorderThickness="1" CornerRadius="2" Margin="5">
-            <Grid VerticalAlignment="Stretch">
+            <WindowsFormsHost Margin="5" Name="Host" Width="700" Height="500">
+            </WindowsFormsHost>
+        </StackPanel>
+       
+
+       
+        <Grid VerticalAlignment="Stretch" Grid.Column="2" Grid.Row="0" Margin="5">
             <Grid.RowDefinitions>
-                <RowDefinition Height="50"/>
+                <RowDefinition Height="Auto"/>
                 <RowDefinition Height="400"/>
                 <RowDefinition Height="Auto"></RowDefinition>
                 <RowDefinition Height="*"></RowDefinition>
             </Grid.RowDefinitions>
                 <ToolBar Margin="5" HorizontalContentAlignment="Center" HorizontalAlignment="Stretch" Grid.Row="0">
-                    <ToggleButton Content="Linija" Width="100" Height="40" Margin="5"   IsChecked="{Binding IsLineDrawing, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
-                    <ToggleButton Content="Srelica" Width="100" Height="40" Margin="5"   IsChecked="{Binding IsArrowDrawing, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
-                    <ToggleButton Content="Kvadrat" Width="100" Height="40" Margin="5"   IsChecked="{Binding IsRactangeDrawing, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
+                    <ToggleButton ToolTip="Crtaj liniju" Margin="5"   IsChecked="{Binding IsLineDrawing, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}">
+                        <Image Source="{StaticResource imgLine}"  Width="25" Height="25"></Image>
+                    </ToggleButton>
+                    <ToggleButton ToolTip="Crtaj strelicu" Margin="5"   IsChecked="{Binding IsArrowDrawing, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}">
+                        <Image Source="{StaticResource imgArrow}" Width="25" Height="25"></Image>
+                    </ToggleButton>
+                    <ToggleButton  ToolTip="Crtaj kvadrat" Margin="5"   IsChecked="{Binding IsRactangeDrawing, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}">
+                        <Image Source="{StaticResource imgRectangle}" Width="25" Height="25"></Image>
+                    </ToggleButton>
+                    <Button  Command="{Binding UndoCommand}" ToolTip="Ponisti" HorizontalAlignment="Right" >
+                        <Image Source="{StaticResource imgUndo}" Width="25" Height="25"></Image>
+                    </Button>
                 </ToolBar>
 
                 <Canvas Name="OvajZaSliku" Width="700" MouseDown="OvajZaSliku_OnMouseDown" Grid.Row="1"></Canvas>
                 <TextBlock HorizontalAlignment="Center" Margin="5,2" Grid.Row="2">Opis slike</TextBlock>
                 <TextBox Margin="5,2" Grid.Row="3" HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto" TextWrapping="Wrap" HorizontalAlignment="Stretch" AcceptsReturn="True"></TextBox>
-            </Grid>
-        </Border>
-
-
-        <StackPanel Grid.Column="2" Grid.Row="1" HorizontalAlignment="Right" Orientation="Horizontal">
-            <Button  Width="150"  Margin="5" Height="50"  HorizontalAlignment="Right" Click="LoadApplication">Ucitaj app</Button>
-            <Button  Width="150" Margin="0,5,5,5" Height="50"  HorizontalAlignment="Right" Click="TakaeScreenShot">Uhvati screenshot</Button>
-        </StackPanel>
-        
+        </Grid>
     </Grid>
 </Window>
