@@ -9,7 +9,7 @@
         >
     <Grid>
         <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="*" MinWidth="750"/>
+            <ColumnDefinition Width="*" MinWidth="800"/>
             <ColumnDefinition Width="20"/>
             <ColumnDefinition Width="*"/>
         </Grid.ColumnDefinitions>
@@ -31,7 +31,7 @@
                 </Button>
             </ToolBar>
 
-            <WindowsFormsHost Margin="5" Name="Host" Width="700" Height="500">
+            <WindowsFormsHost Margin="5,30" Name="Host" Width="800" Height="500" >
             </WindowsFormsHost>
         </StackPanel>
        
@@ -59,8 +59,11 @@
                     </Button>
                 </ToolBar>
 
-                <Canvas Name="OvajZaSliku" Width="700" MouseDown="OvajZaSliku_OnMouseDown" Grid.Row="1"></Canvas>
-                <TextBlock HorizontalAlignment="Center" Margin="5,2" Grid.Row="2">Opis slike</TextBlock>
+            
+                <Canvas Grid.Row="1" Name="OvajZaSliku" HorizontalAlignment="Stretch" MouseDown="OvajZaSliku_OnMouseDown" Background="LightGray"/>
+
+
+            <TextBlock HorizontalAlignment="Center" Margin="5,2" Grid.Row="2">Opis slike</TextBlock>
                 <TextBox Margin="5,2" Grid.Row="3" HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto" TextWrapping="Wrap" HorizontalAlignment="Stretch" AcceptsReturn="True"></TextBox>
         </Grid>
     </Grid>
