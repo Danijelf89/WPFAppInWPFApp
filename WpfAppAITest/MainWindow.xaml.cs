@@ -1,6 +1,8 @@
-﻿using System.ComponentModel;
+﻿using Microsoft.VisualBasic;
+using System.ComponentModel;
 using System.Windows;
 using System.Windows.Input;
+using System.Windows.Media.Imaging;
 using WpfAppAITest.ViewModels;
 
 namespace WpfAppAITest
@@ -16,6 +18,14 @@ namespace WpfAppAITest
             var dataContext = new MainWindowViewModel(OvajZaSliku, Host);
             DataContext = dataContext;
             Host.SizeChanged += LeftGrid_SizeChanged;
+            Icon = new BitmapImage(PathToAppUri($"/{typeof(App).Namespace};component/logo.jpg"));
+
+
+        }
+
+        public static Uri PathToAppUri(string relativePath)
+        {
+            return new Uri("pack://application:,,," + relativePath, UriKind.RelativeOrAbsolute);
         }
 
         private void LeftGrid_SizeChanged(object sender, SizeChangedEventArgs e)
