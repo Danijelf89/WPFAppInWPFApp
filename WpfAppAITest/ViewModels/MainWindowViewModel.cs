@@ -1,11 +1,14 @@
 ﻿using System.Diagnostics;
+using System.Drawing.Imaging;
 using System.Runtime.InteropServices;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Forms.Integration;
 using System.Windows.Input;
 using System.Windows.Media;
+using System.Windows.Media.Imaging;
 using System.Windows.Shapes;
+using System.Windows.Threading;
 using WpfAppAITest.Command;
 using WpfAppAITest.Helpers;
 using MessageBox = System.Windows.Forms.MessageBox;
@@ -15,6 +18,9 @@ namespace WpfAppAITest.ViewModels
 {
     public  class MainWindowViewModel : BaseViewModel
     {
+        private  DispatcherTimer _timer;
+        private readonly ScreenCapture _screenCapture = new();
+
         [DllImport("user32.dll")]
         static extern IntPtr SetParent(IntPtr hWndChild, IntPtr hWndNewParent);
 
@@ -32,21 +38,26 @@ namespace WpfAppAITest.ViewModels
 
         //private readonly Panel _leftGrid;
         private readonly Canvas _canvas;
-        private WindowsFormsHost _winFormsHost;
+        private System.Windows.Controls.Image _scrrenImage;
         private System.Windows.Forms.Panel _winFormsPanel;
 
 
-        public MainWindowViewModel(Canvas canvas, WindowsFormsHost winFormsHost)
+        public MainWindowViewModel(Canvas canvas, System.Windows.Controls.Image scrrenImage)
         {
             _canvas = canvas;
-            _winFormsHost = winFormsHost;
+            _scrrenImage = scrrenImage;
             _winFormsPanel = new System.Windows.Forms.Panel();
-            _winFormsHost.Child = _winFormsPanel;
+            
+            //_winFormsHost.Child = _winFormsPanel;
         }
 
         private DelegateCommand _loadAppCommand;
         public DelegateCommand LoadAppCommand => _loadAppCommand ??=
             new DelegateCommand(LoadExternalApplication, _ => true);
+
+        private DelegateCommand _shareScreenCommand;
+        public DelegateCommand ShareScreenCommand => _shareScreenCommand ??=
+            new DelegateCommand(ShareScreen, _ => true);
 
         private DelegateCommand _undoCommand;
         public DelegateCommand UndoCommand => _undoCommand ??=
@@ -61,9 +72,33 @@ namespace WpfAppAITest.ViewModels
         public DelegateCommand DeleteAppCommand => _deleteApp ??=
             new DelegateCommand(DeleteApp, TakeScreenshotCanExecute);
 
+        private void ShareScreen(object o)
+        {
+            _timer = new DispatcherTimer { Interval = TimeSpan.FromMilliseconds(100) };
+            _timer.Tick += (s, e) => _scrrenImage.Source = BitmapToImageSource(_screenCapture.CaptureScreen());
+            _timer.Start();
+
+            LabelVisible= Visibility.Collapsed;
+        }
+
+        private BitmapSource BitmapToImageSource(Bitmap bitmap)
+        {
+            using (var memory = new System.IO.MemoryStream())
+            {
+                bitmap.Save(memory, ImageFormat.Bmp);
+                memory.Position = 0;
+                var bitmapImage = new BitmapImage();
+                bitmapImage.BeginInit();
+                bitmapImage.StreamSource = memory;
+                bitmapImage.CacheOption = BitmapCacheOption.OnLoad;
+                bitmapImage.EndInit();
+                return bitmapImage;
+            }
+        }
+
         private void TakeScreenshot(object o)
         {
-            ScreenShotHelper.CaptureGridAndSetAsBackground(_winFormsHost, _canvas);
+            //ScreenShotHelper.CaptureGridAndSetAsBackground(_winFormsHost, _canvas);
         }
 
         private void DeleteApp(object o)
@@ -387,7 +422,21 @@ namespace WpfAppAITest.ViewModels
             set
             {
                 _hostVisibility = value;
-                OnPropertyChanged(); // Notify UI
+                OnPropertyChanged();
+                
+                OnPropertyChanged(nameof(LabelVisible));// Notify UI
+            }
+        }
+
+        private Visibility _labelVisible = Visibility.Visible; // Default is Visible
+
+        public Visibility LabelVisible
+        {
+            get => _labelVisible;
+            set
+            {
+                _labelVisible = value;
+                OnPropertyChanged();
             }
         }
 
@@ -402,6 +451,20 @@ namespace WpfAppAITest.ViewModels
                 HostVisibility = Visibility.Visible;
             }
 
+        }
+    }
+
+    public class ScreenCapture
+    {
+        public Bitmap CaptureScreen()
+        {
+            var bounds = System.Windows.Forms.Screen.PrimaryScreen.Bounds;
+            var bitmap = new Bitmap(bounds.Width, bounds.Height);
+            using (var g = Graphics.FromImage(bitmap))
+            {
+                g.CopyFromScreen(bounds.Location, System.Drawing.Point.Empty, bounds.Size);
+            }
+            return bitmap;
         }
     }
 }

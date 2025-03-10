@@ -1,9 +1,12 @@
 ﻿using Microsoft.VisualBasic;
 using System.ComponentModel;
+using System.Drawing.Imaging;
 using System.Windows;
 using System.Windows.Input;
 using System.Windows.Media.Imaging;
+using System.Windows.Threading;
 using WpfAppAITest.ViewModels;
+using Point = System.Drawing.Point;
 
 namespace WpfAppAITest
 {
@@ -15,13 +18,14 @@ namespace WpfAppAITest
         public MainWindow()
         {
             InitializeComponent();
-            var dataContext = new MainWindowViewModel(WpfAppCanvas, Host);
+            var dataContext = new MainWindowViewModel(WpfAppCanvas, ScreenImage);
             DataContext = dataContext;
-            Host.SizeChanged += LeftGrid_SizeChanged;
+            //Host.SizeChanged += LeftGrid_SizeChanged;
             Icon = new BitmapImage(PathToAppUri($"/{typeof(App).Namespace};component/logo.jpg"));
 
-
         }
+
+        
 
         public static Uri PathToAppUri(string relativePath)
         {
@@ -35,7 +39,7 @@ namespace WpfAppAITest
 
         private void MainWindow_OnClosing(object? sender, CancelEventArgs e)
         {
-            Host.SizeChanged -= LeftGrid_SizeChanged;
+            //Host.SizeChanged -= LeftGrid_SizeChanged;
         }
 
         private void WpfAppCanvas_MouseDown(object sender, MouseButtonEventArgs e)

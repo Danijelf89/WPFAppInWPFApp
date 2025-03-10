@@ -25,15 +25,15 @@
         <Border BorderBrush="Transparent" BorderThickness="1" Grid.Column="0" Margin="0">
             <Grid>
                 <Grid.RowDefinitions>
-                    <RowDefinition Height="100"/>
+                    <RowDefinition Height="Auto"/>
                     <RowDefinition Height="*" />
                     <RowDefinition Height="200"/>
                 </Grid.RowDefinitions>
                 <Border BorderBrush="Transparent" BorderThickness="1" Grid.Row="0" Margin="5" CornerRadius="10">
                     <Grid>
                         <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="5*" />
-                            <ColumnDefinition Width="5*" />
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="*" />
                         </Grid.ColumnDefinitions>
 
                         <Border BorderBrush="Transparent" BorderThickness="1" Grid.Column="0" Margin="0,0,5,0" CornerRadius="10" Background="White">
@@ -41,55 +41,43 @@
                                 <DropShadowEffect Color="Black" BlurRadius="10" ShadowDepth="5" Opacity="0.2"/>
                             </Border.Effect>
                             <Grid>
-                                <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="Auto" />
-                                    <ColumnDefinition Width="Auto" />
-                                    <ColumnDefinition Width="Auto" />
-                                    <ColumnDefinition Width="Auto" />
-                                </Grid.ColumnDefinitions>
-                                <Button Style="{DynamicResource MaterialDesignFloatingActionButton}" Command="{Binding LoadAppCommand}" Grid.Column="0" Margin="10">
-                                    <materialDesign:PackIcon Kind="Play" Width="32" Height="32"/>
+                                <ToolBar>
+                                    <Button Style="{DynamicResource MaterialDesignFloatingActionButton}" Width="30" Height="30" Command="{Binding ShareScreenCommand}"  Margin="10">
+                                        <materialDesign:PackIcon Kind="Play" Width="20" Height="20"/>
                                 </Button>
-                                <Button Style="{DynamicResource MaterialDesignFloatingActionButton}" Command="{Binding DeleteAppCommand}" Grid.Column="1" Margin="10">
-                                    <materialDesign:PackIcon Kind="Stop" Width="32" Height="32"/>
+                                    <Button Style="{DynamicResource MaterialDesignFloatingActionButton}" Width="30" Height="30" Command="{Binding DeleteAppCommand}"  Margin="10">
+                                    <materialDesign:PackIcon Kind="Stop" Width="20" Height="20"/>
                                 </Button>
-                                <Button Style="{DynamicResource MaterialDesignFloatingActionButton}" Command="{Binding AddScreenshot}" Grid.Column="2"  Margin="10">
-                                    <materialDesign:PackIcon Kind="Camera" Width="32" Height="32"/>
+                                    <Button Style="{DynamicResource MaterialDesignFloatingActionButton}" Width="30" Height="30" Command="{Binding AddScreenshot}"   Margin="10">
+                                    <materialDesign:PackIcon Kind="Camera" Width="20" Height="20"/>
                                 </Button>
-                                <Button Style="{DynamicResource MaterialDesignFloatingActionButton}" Command="{Binding ClearScreenshot}" Grid.Column="3"  Margin="10">
-                                    <materialDesign:PackIcon Kind="CameraOff" Width="32" Height="32"/>
+                                    <Button Style="{DynamicResource MaterialDesignFloatingActionButton}" Width="30" Height="30" Command="{Binding ClearScreenshot}"   Margin="10">
+                                    <materialDesign:PackIcon Kind="CameraOff" Width="20" Height="20"/>
                                 </Button>
-
+                                </ToolBar>
                             </Grid>
                         </Border>
                         <Border BorderBrush="Transparent" BorderThickness="1" Grid.Column="1" Margin="5,0,0,0" CornerRadius="10" Background="White">
                             <Border.Effect>
                                 <DropShadowEffect Color="Black" BlurRadius="10" ShadowDepth="5" Opacity="0.2"/>
                             </Border.Effect>
-                            <Grid Grid.Column="1">
-                                <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="Auto" />
-                                    <ColumnDefinition Width="Auto" />
-                                    <ColumnDefinition Width="Auto" />
-                                    <ColumnDefinition Width="Auto" />
-                                    <ColumnDefinition Width="Auto" />
-                                </Grid.ColumnDefinitions>
-                                <ToggleButton Style="{DynamicResource MaterialDesignFloatingActionLightButton}" Grid.Column="0" Margin="10"  IsChecked="{Binding IsLineDrawing, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}">
-                                    <materialDesign:PackIcon Kind="VectorLine" Width="32" Height="32"/>
+                           <ToolBar>
+                                <ToggleButton Style="{DynamicResource MaterialDesignFloatingActionLightButton}" Width="30" Height="30"  Margin="10"  IsChecked="{Binding IsLineDrawing, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}">
+                                    <materialDesign:PackIcon Kind="VectorLine" Width="20" Height="20"/>
                                 </ToggleButton>
-                                <ToggleButton Style="{DynamicResource MaterialDesignFloatingActionLightButton}" Grid.Column="1" Margin="10" IsChecked="{Binding IsArrowDrawing, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}">
-                                    <materialDesign:PackIcon Kind="ArrowTopRight" Width="32" Height="32"/>
+                                <ToggleButton Style="{DynamicResource MaterialDesignFloatingActionLightButton}" Width="30" Height="30"  Margin="10" IsChecked="{Binding IsArrowDrawing, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}">
+                                    <materialDesign:PackIcon Kind="ArrowTopRight" Width="20" Height="20"/>
                                 </ToggleButton>
-                                <ToggleButton Style="{DynamicResource MaterialDesignFloatingActionLightButton}"  Grid.Column="2"  Margin="10" IsChecked="{Binding IsRactangeDrawing, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}">
-                                    <materialDesign:PackIcon Kind="RectangleOutline" Width="32" Height="32"/>
+                                <ToggleButton Style="{DynamicResource MaterialDesignFloatingActionLightButton}" Width="30" Height="30"   Margin="10" IsChecked="{Binding IsRactangeDrawing, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}">
+                                    <materialDesign:PackIcon Kind="RectangleOutline" Width="20" Height="20"/>
                                 </ToggleButton>
-                                <ToggleButton Style="{DynamicResource MaterialDesignFloatingActionLightButton}"  Grid.Column="3"  Margin="10" IsChecked="{Binding IsRactangeDrawing, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}">
-                                    <materialDesign:PackIcon Kind="FormatLetterCase" Width="32" Height="32"/>
+                                <ToggleButton Style="{DynamicResource MaterialDesignFloatingActionLightButton}"  Width="30" Height="30"  Margin="10" IsChecked="{Binding IsRactangeDrawing, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}">
+                                    <materialDesign:PackIcon Kind="FormatLetterCase" Width="20" Height="20"/>
                                 </ToggleButton>
-                                <Button Style="{DynamicResource MaterialDesignFloatingActionLightButton}"  Grid.Column="4"  Margin="10"  Command="{Binding UndoCommand}">
-                                    <materialDesign:PackIcon Kind="UndoVariant" Width="32" Height="32"/>
+                                <Button Style="{DynamicResource MaterialDesignFloatingActionLightButton}"  Width="30" Height="30"  Margin="10"  Command="{Binding UndoCommand}">
+                                    <materialDesign:PackIcon Kind="UndoVariant" Width="20" Height="20"/>
                                 </Button>
-                            </Grid>
+                           </ToolBar>
                         </Border>
                     </Grid>
 
@@ -99,11 +87,11 @@
                         <DropShadowEffect Color="Black" BlurRadius="10" ShadowDepth="5" Opacity="0.2"/>
                     </Border.Effect>
                     <Grid>
-                        <WindowsFormsHost Name="Host" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Margin="0" Background="Transparent" ClipToBounds="True" SnapsToDevicePixels="True" Visibility="{Binding HostVisibility}" >
+                        <Image x:Name="ScreenImage" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Margin="0"  ClipToBounds="True" SnapsToDevicePixels="True"  Visibility="{Binding HostVisibility}">
 
-                        </WindowsFormsHost>
+                        </Image>
                         <!--<wv2:WebView2 Name="webView" Source="https://www.google.com"/>-->
-                        <TextBlock Text="Please load your application!" VerticalAlignment="Center" HorizontalAlignment="Center" />
+                        <TextBlock Text="Please load your application!" VerticalAlignment="Center" HorizontalAlignment="Center" Visibility="{Binding LabelVisible, UpdateSourceTrigger=PropertyChanged}"/>
                         <Canvas Name="WpfAppCanvas" HorizontalAlignment="Stretch" Background="Transparent" MouseDown="WpfAppCanvas_MouseDown" Margin="0"/>
                     </Grid>
                 </Border>
@@ -191,7 +179,7 @@
                                 </Button>
 
                             </ToolBar>
-                            <RichTextBox Name="mainRTB" AcceptsTab="True" VerticalContentAlignment="Top" Padding="20"></RichTextBox>
+                            <RichTextBox Name="mainRTB" AcceptsTab="True" VerticalContentAlignment="Top" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Auto" Padding="20"></RichTextBox>
                         </DockPanel>
                     </Grid>
                 </Border>
