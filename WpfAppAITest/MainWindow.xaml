@@ -1,70 +1,218 @@
 ﻿<Window x:Class="WpfAppAITest.MainWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+         xmlns:wv2="clr-namespace:Microsoft.Web.WebView2.Wpf;assembly=Microsoft.Web.WebView2.Wpf"
+         xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
+         Style="{StaticResource MaterialDesignWindow}"
+         TextElement.Foreground="{DynamicResource MaterialDesign.Brush.Foreground}"
+         Background="{DynamicResource MaterialDesign.Brush.Background}"
+         TextElement.FontWeight="Medium"
+         TextElement.FontSize="14"
+         FontFamily="pack://application:,,,/MaterialDesignThemes.Wpf;component/Resources/Roboto/#Roboto"        
         Title="Test AI app" 
         WindowState="Normal"
         WindowStartupLocation="CenterScreen"
         ResizeMode="CanResize"
         Closing="MainWindow_OnClosing"
         >
-    <Grid>
+    <Grid Margin="5">
         <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="*" MinWidth="800"/>
-            <ColumnDefinition Width="20"/>
-            <ColumnDefinition Width="*"/>
+            <ColumnDefinition Width="6*" />
+            <!-- 60% -->
+            <ColumnDefinition Width="4*" />
+            <!-- 40% -->
         </Grid.ColumnDefinitions>
-        <Grid.RowDefinitions>
-            <RowDefinition Height="*"/>
-        </Grid.RowDefinitions>
+        <Border BorderBrush="Transparent" BorderThickness="1" Grid.Column="0" Margin="0">
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="100"/>
+                    <RowDefinition Height="*" />
+                    <RowDefinition Height="200"/>
+                </Grid.RowDefinitions>
+                <Border BorderBrush="Transparent" BorderThickness="1" Grid.Row="0" Margin="5" CornerRadius="10">
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="5*" />
+                            <ColumnDefinition Width="5*" />
+                        </Grid.ColumnDefinitions>
 
+                        <Border BorderBrush="Transparent" BorderThickness="1" Grid.Column="0" Margin="0,0,5,0" CornerRadius="10" Background="White">
+                            <Border.Effect>
+                                <DropShadowEffect Color="Black" BlurRadius="10" ShadowDepth="5" Opacity="0.2"/>
+                            </Border.Effect>
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto" />
+                                    <ColumnDefinition Width="Auto" />
+                                    <ColumnDefinition Width="Auto" />
+                                    <ColumnDefinition Width="Auto" />
+                                </Grid.ColumnDefinitions>
+                                <Button Style="{DynamicResource MaterialDesignFloatingActionButton}" Command="{Binding LoadAppCommand}" Grid.Column="0" Margin="10">
+                                    <materialDesign:PackIcon Kind="Play" Width="32" Height="32"/>
+                                </Button>
+                                <Button Style="{DynamicResource MaterialDesignFloatingActionButton}" Command="{Binding DeleteAppCommand}" Grid.Column="1" Margin="10">
+                                    <materialDesign:PackIcon Kind="Stop" Width="32" Height="32"/>
+                                </Button>
+                                <Button Style="{DynamicResource MaterialDesignFloatingActionButton}" Command="{Binding AddScreenshot}" Grid.Column="2"  Margin="10">
+                                    <materialDesign:PackIcon Kind="Camera" Width="32" Height="32"/>
+                                </Button>
+                                <Button Style="{DynamicResource MaterialDesignFloatingActionButton}" Command="{Binding ClearScreenshot}" Grid.Column="3"  Margin="10">
+                                    <materialDesign:PackIcon Kind="CameraOff" Width="32" Height="32"/>
+                                </Button>
 
-        <StackPanel Grid.Row="0" Grid.Column="0" Margin="5">
-            <ToolBar Margin="5" HorizontalContentAlignment="Center" HorizontalAlignment="Stretch" Grid.Row="0">
-                <Button  ToolTip="Startuj embeded aplikaciju"  Margin="5" HorizontalAlignment="Right" Command="{Binding LoadAppCommand}">
-                    <Image Source="{StaticResource imgStartApp}" Width="25" Height="25"></Image>
-                </Button>
-                <Button ToolTip="Uhvati screenshot" Margin="5" HorizontalAlignment="Right" Command="{Binding AddScreenshot}">
-                    <Image Source="{StaticResource imgPhoto}" Width="25" Height="25"></Image>
-                </Button>
-                <Button  Margin="0,5,5,5" ToolTip="Ugasi embeded aplikaciju"  HorizontalAlignment="Right" Command="{Binding DeleteAppCommand}">
-                    <Image Source="{StaticResource imgShutDown}" Width="25" Height="25"></Image>
-                </Button>
-            </ToolBar>
+                            </Grid>
+                        </Border>
+                        <Border BorderBrush="Transparent" BorderThickness="1" Grid.Column="1" Margin="5,0,0,0" CornerRadius="10" Background="White">
+                            <Border.Effect>
+                                <DropShadowEffect Color="Black" BlurRadius="10" ShadowDepth="5" Opacity="0.2"/>
+                            </Border.Effect>
+                            <Grid Grid.Column="1">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto" />
+                                    <ColumnDefinition Width="Auto" />
+                                    <ColumnDefinition Width="Auto" />
+                                    <ColumnDefinition Width="Auto" />
+                                    <ColumnDefinition Width="Auto" />
+                                </Grid.ColumnDefinitions>
+                                <ToggleButton Style="{DynamicResource MaterialDesignFloatingActionLightButton}" Grid.Column="0" Margin="10"  IsChecked="{Binding IsLineDrawing, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}">
+                                    <materialDesign:PackIcon Kind="VectorLine" Width="32" Height="32"/>
+                                </ToggleButton>
+                                <ToggleButton Style="{DynamicResource MaterialDesignFloatingActionLightButton}" Grid.Column="1" Margin="10" IsChecked="{Binding IsArrowDrawing, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}">
+                                    <materialDesign:PackIcon Kind="ArrowTopRight" Width="32" Height="32"/>
+                                </ToggleButton>
+                                <ToggleButton Style="{DynamicResource MaterialDesignFloatingActionLightButton}"  Grid.Column="2"  Margin="10" IsChecked="{Binding IsRactangeDrawing, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}">
+                                    <materialDesign:PackIcon Kind="RectangleOutline" Width="32" Height="32"/>
+                                </ToggleButton>
+                                <ToggleButton Style="{DynamicResource MaterialDesignFloatingActionLightButton}"  Grid.Column="3"  Margin="10" IsChecked="{Binding IsRactangeDrawing, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}">
+                                    <materialDesign:PackIcon Kind="FormatLetterCase" Width="32" Height="32"/>
+                                </ToggleButton>
+                                <Button Style="{DynamicResource MaterialDesignFloatingActionLightButton}"  Grid.Column="4"  Margin="10"  Command="{Binding UndoCommand}">
+                                    <materialDesign:PackIcon Kind="UndoVariant" Width="32" Height="32"/>
+                                </Button>
+                            </Grid>
+                        </Border>
+                    </Grid>
 
-            <WindowsFormsHost Margin="5,30" Name="Host" Width="800" Height="500" >
-            </WindowsFormsHost>
-        </StackPanel>
-       
+                </Border>
+                <Border BorderBrush="Transparent" BorderThickness="1" Grid.Row="1" Margin="5" CornerRadius="0" Background="White">
+                    <Border.Effect>
+                        <DropShadowEffect Color="Black" BlurRadius="10" ShadowDepth="5" Opacity="0.2"/>
+                    </Border.Effect>
+                    <Grid>
+                        <WindowsFormsHost Name="Host" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Margin="0" Background="Transparent" ClipToBounds="True" SnapsToDevicePixels="True" Visibility="{Binding HostVisibility}" >
 
-       
-        <Grid VerticalAlignment="Stretch" Grid.Column="2" Grid.Row="0" Margin="5">
-            <Grid.RowDefinitions>
-                <RowDefinition Height="Auto"/>
-                <RowDefinition Height="400"/>
-                <RowDefinition Height="Auto"></RowDefinition>
-                <RowDefinition Height="*"></RowDefinition>
-            </Grid.RowDefinitions>
-                <ToolBar Margin="5" HorizontalContentAlignment="Center" HorizontalAlignment="Stretch" Grid.Row="0">
-                    <ToggleButton ToolTip="Crtaj liniju" Margin="5"   IsChecked="{Binding IsLineDrawing, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}">
-                        <Image Source="{StaticResource imgLine}"  Width="25" Height="25"></Image>
-                    </ToggleButton>
-                    <ToggleButton ToolTip="Crtaj strelicu" Margin="5"   IsChecked="{Binding IsArrowDrawing, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}">
-                        <Image Source="{StaticResource imgArrow}" Width="25" Height="25"></Image>
-                    </ToggleButton>
-                    <ToggleButton  ToolTip="Crtaj kvadrat" Margin="5"   IsChecked="{Binding IsRactangeDrawing, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}">
-                        <Image Source="{StaticResource imgRectangle}" Width="25" Height="25"></Image>
-                    </ToggleButton>
-                    <Button  Command="{Binding UndoCommand}" ToolTip="Ponisti" HorizontalAlignment="Right" >
-                        <Image Source="{StaticResource imgUndo}" Width="25" Height="25"></Image>
-                    </Button>
-                </ToolBar>
+                        </WindowsFormsHost>
+                        <!--<wv2:WebView2 Name="webView" Source="https://www.google.com"/>-->
+                        <TextBlock Text="Please load your application!" VerticalAlignment="Center" HorizontalAlignment="Center" />
+                        <Canvas Name="WpfAppCanvas" HorizontalAlignment="Stretch" Background="Transparent" MouseDown="WpfAppCanvas_MouseDown" Margin="0"/>
+                    </Grid>
+                </Border>
+                <Border BorderBrush="Transparent" BorderThickness="1" Grid.Row="2" Margin="5" Background="White">
+                    <Border.Effect>
+                        <DropShadowEffect Color="Black" BlurRadius="10" ShadowDepth="5" Opacity="0.2"/>
+                    </Border.Effect>
+                    <Grid>
 
-            
-                <Canvas Grid.Row="1" Name="OvajZaSliku" HorizontalAlignment="Stretch" MouseDown="OvajZaSliku_OnMouseDown" Background="LightGray"/>
+                        <!-- Set the styles for the tool bar. -->
+                        <Grid.Resources>
+                            <Style TargetType="{x:Type Button}" x:Key="formatTextStyle">
+                                <Setter Property="FontFamily" Value="Palatino Linotype"></Setter>
+                                <Setter Property="Width" Value="30"></Setter>
+                                <Setter Property="FontSize" Value ="14"></Setter>
+                                <Setter Property="CommandTarget" Value="{Binding ElementName=mainRTB}"></Setter>
+                            </Style>
 
+                            <Style TargetType="{x:Type Button}" x:Key="formatImageStyle">
+                                <Setter Property="Width" Value="30"></Setter>
+                                <Setter Property="CommandTarget" Value="{Binding ElementName=mainRTB}"></Setter>
+                            </Style>
+                        </Grid.Resources>
 
-            <TextBlock HorizontalAlignment="Center" Margin="5,2" Grid.Row="2">Opis slike</TextBlock>
-                <TextBox Margin="5,2" Grid.Row="3" HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto" TextWrapping="Wrap" HorizontalAlignment="Stretch" AcceptsReturn="True"></TextBox>
-        </Grid>
+                        <DockPanel Name="mainPanel">
+
+                            <!-- This tool bar contains all the editing buttons. -->
+                            <ToolBar Name="mainToolBar" Height="30" DockPanel.Dock="Top" Background="White">
+
+                                <Button Style="{StaticResource formatImageStyle}" Command="ApplicationCommands.Cut" ToolTip="Cut">
+                                    <materialDesign:PackIcon Kind="ContentCut" Width="16" Height="16"/>
+                                </Button>
+                                <Button Style="{StaticResource formatImageStyle}" Command="ApplicationCommands.Copy" ToolTip="Copy">
+                                    <materialDesign:PackIcon Kind="ContentCopy" Width="16" Height="16"/>
+                                </Button>
+                                <Button Style="{StaticResource formatImageStyle}" Command="ApplicationCommands.Paste" ToolTip="Paste">
+                                    <materialDesign:PackIcon Kind="ContentPaste" Width="16" Height="16"/>
+                                </Button>
+                                <Button Style="{StaticResource formatImageStyle}" Command="ApplicationCommands.Undo" ToolTip="Undo">
+                                    <materialDesign:PackIcon Kind="Undo" Width="16" Height="16"/>
+                                </Button>
+                                <Button Style="{StaticResource formatImageStyle}" Command="ApplicationCommands.Redo" ToolTip="Redo">
+                                    <materialDesign:PackIcon Kind="Redo" Width="16" Height="16"/>
+                                </Button>
+
+                                <Button Style="{StaticResource formatTextStyle}" Command="EditingCommands.ToggleBold" ToolTip="Bold">
+                                    <TextBlock FontWeight="Bold">B</TextBlock>
+                                </Button>
+                                <Button Style="{StaticResource formatTextStyle}" Command="EditingCommands.ToggleItalic" ToolTip="Italic">
+                                    <TextBlock FontStyle="Italic" FontWeight="Bold">I</TextBlock>
+                                </Button>
+                                <Button Style="{StaticResource formatTextStyle}" Command="EditingCommands.ToggleUnderline" ToolTip="Underline">
+                                    <TextBlock TextDecorations="Underline" FontWeight="Bold">U</TextBlock>
+                                </Button>
+                                <Button Style="{StaticResource formatImageStyle}" Command="EditingCommands.IncreaseFontSize" ToolTip="Grow Font">
+                                    <materialDesign:PackIcon Kind="FormatFontSizeIncrease" Width="16" Height="16"/>
+                                </Button>
+                                <Button Style="{StaticResource formatImageStyle}" Command="EditingCommands.DecreaseFontSize" ToolTip="Shrink Font">
+                                    <materialDesign:PackIcon Kind="FormatFontSizeDecrease" Width="16" Height="16"/>
+                                </Button>
+
+                                <Button Style="{StaticResource formatImageStyle}" Command="EditingCommands.ToggleBullets" ToolTip="Bullets">
+                                    <materialDesign:PackIcon Kind="DotsVertical" Width="16" Height="16"/>
+                                </Button>
+                                <Button Style="{StaticResource formatImageStyle}" Command="EditingCommands.ToggleNumbering" ToolTip="Numbering">
+                                    <materialDesign:PackIcon Kind="Numeric" Width="16" Height="16"/>
+                                </Button>
+                                <Button Style="{StaticResource formatImageStyle}" Command="EditingCommands.AlignLeft" ToolTip="Align Left">
+                                    <materialDesign:PackIcon Kind="FormatAlignLeft" Width="16" Height="16"/>
+                                </Button>
+                                <Button Style="{StaticResource formatImageStyle}" Command="EditingCommands.AlignCenter" ToolTip="Align Center">
+                                    <materialDesign:PackIcon Kind="FormatAlignCenter" Width="16" Height="16"/>
+                                </Button>
+                                <Button Style="{StaticResource formatImageStyle}" Command="EditingCommands.AlignRight" ToolTip="Align Right">
+                                    <materialDesign:PackIcon Kind="FormatAlignRight" Width="16" Height="16"/>
+                                </Button>
+                                <Button Style="{StaticResource formatImageStyle}" Command="EditingCommands.AlignJustify" ToolTip="Align Justify">
+                                    <materialDesign:PackIcon Kind="FormatAlignJustify" Width="16" Height="16"/>
+                                </Button>
+                                <Button Style="{StaticResource formatImageStyle}" Command="EditingCommands.IncreaseIndentation" ToolTip="Increase Indent">
+                                    <materialDesign:PackIcon Kind="FormatIndentIncrease" Width="16" Height="16"/>
+                                </Button>
+                                <Button Style="{StaticResource formatImageStyle}" Command="EditingCommands.DecreaseIndentation" ToolTip="Decrease Indent">
+                                    <materialDesign:PackIcon Kind="FormatIndentDecrease" Width="16" Height="16"/>
+                                </Button>
+
+                            </ToolBar>
+                            <RichTextBox Name="mainRTB" AcceptsTab="True" VerticalContentAlignment="Top" Padding="20"></RichTextBox>
+                        </DockPanel>
+                    </Grid>
+                </Border>
+            </Grid>
+        </Border>
+        <Border BorderBrush="Transparent" BorderThickness="1" Grid.Column="1" Margin="0">
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="*" />
+                </Grid.RowDefinitions>
+
+                <Border BorderBrush="Transparent" BorderThickness="1" Grid.Row="0" Margin="5" CornerRadius="10" Background="White">
+                    <Border.Effect>
+                        <DropShadowEffect Color="Black" BlurRadius="10" ShadowDepth="5" Opacity="0.2"/>
+                    </Border.Effect>
+                    <Grid>
+                        <TextBlock Text="Dokument" VerticalAlignment="Center" HorizontalAlignment="Center"/>
+                    </Grid>
+                </Border>
+
+            </Grid>
+        </Border>
     </Grid>
 </Window>

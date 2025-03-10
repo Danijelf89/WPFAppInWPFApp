@@ -15,7 +15,7 @@ namespace WpfAppAITest
         public MainWindow()
         {
             InitializeComponent();
-            var dataContext = new MainWindowViewModel(OvajZaSliku, Host);
+            var dataContext = new MainWindowViewModel(WpfAppCanvas, Host);
             DataContext = dataContext;
             Host.SizeChanged += LeftGrid_SizeChanged;
             Icon = new BitmapImage(PathToAppUri($"/{typeof(App).Namespace};component/logo.jpg"));
@@ -38,7 +38,7 @@ namespace WpfAppAITest
             Host.SizeChanged -= LeftGrid_SizeChanged;
         }
 
-        private void OvajZaSliku_OnMouseDown(object sender, MouseButtonEventArgs e)
+        private void WpfAppCanvas_MouseDown(object sender, MouseButtonEventArgs e)
         {
             ((MainWindowViewModel)DataContext).DrawElement(sender, e);
         }

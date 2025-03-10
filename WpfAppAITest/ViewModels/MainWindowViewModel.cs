@@ -259,6 +259,42 @@ namespace WpfAppAITest.ViewModels
             _canvas.Children.Add(arrowhead);
         }
 
+        private Point _rectStartPoint;  // Početna tačka
+        private Point _rectEndPoint;    // Krajna tačka
+        private void DrawRectangle(object sender, MouseButtonEventArgs e)
+        {
+            if (_rectStartPoint is { X: 0, Y: 0 })
+            {
+                _rectStartPoint = e.GetPosition((UIElement)sender);
+            }
+            else
+            {
+                _rectEndPoint = e.GetPosition((UIElement)sender);
+
+                int x = (int)Math.Min(_rectStartPoint.X, _rectEndPoint.X);
+                int y = (int)Math.Min(_rectStartPoint.Y, _rectEndPoint.Y);
+                int width = (int)Math.Abs(_rectStartPoint.X - _rectEndPoint.X);
+                int height = (int)Math.Abs(_rectStartPoint.Y - _rectEndPoint.Y);
+
+                System.Windows.Shapes.Rectangle rect = new System.Windows.Shapes.Rectangle
+                {
+                    Width = width,
+                    Height = height,
+                    Stroke = System.Windows.Media.Brushes.Black,
+                    StrokeThickness = 2
+                };
+
+                Canvas.SetLeft(rect, x);
+                Canvas.SetTop(rect, y);
+                _canvas.Children.Add(rect);
+
+                _rectStartPoint.X = 0;
+                _rectStartPoint.Y = 0;
+                _rectEndPoint.X = 0;
+                _rectEndPoint.Y = 0;
+            }
+        }
+
         private bool _isLineDrawing;
 
         public bool IsLineDrawing
@@ -341,6 +377,31 @@ namespace WpfAppAITest.ViewModels
             // P/Invoke za SetWindowLong (postavljanje stila prozora)
             [DllImport("user32.dll", SetLastError = true)]
             public static extern int SetWindowLong(IntPtr hWnd, int nIndex, int dwNewLong);
+        }
+
+        private Visibility _hostVisibility = Visibility.Visible; // Default is Visible
+
+        public Visibility HostVisibility
+        {
+            get => _hostVisibility;
+            set
+            {
+                _hostVisibility = value;
+                OnPropertyChanged(); // Notify UI
+            }
+        }
+
+        private void ToggleHostVisibility()
+        {
+            if (HostVisibility == Visibility.Visible)
+            {
+                HostVisibility = Visibility.Collapsed;
+            }
+            else
+            {
+                HostVisibility = Visibility.Visible;
+            }
+
         }
     }
 }
