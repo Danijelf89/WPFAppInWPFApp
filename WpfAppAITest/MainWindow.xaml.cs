@@ -18,7 +18,7 @@ namespace WpfAppAITest
         public MainWindow()
         {
             InitializeComponent();
-            var dataContext = new MainWindowViewModel(WpfAppCanvas, ScreenImage);
+            var dataContext = new MainWindowViewModel(WpfAppCanvas);
             DataContext = dataContext;
             //Host.SizeChanged += LeftGrid_SizeChanged;
             Icon = new BitmapImage(PathToAppUri($"/{typeof(App).Namespace};component/logo.jpg"));
@@ -34,12 +34,12 @@ namespace WpfAppAITest
 
         private void LeftGrid_SizeChanged(object sender, SizeChangedEventArgs e)
         {
-            ((MainWindowViewModel)DataContext).ResizeEmbeddedApp();
+            
         }
 
         private void MainWindow_OnClosing(object? sender, CancelEventArgs e)
         {
-            //Host.SizeChanged -= LeftGrid_SizeChanged;
+         
         }
 
         private void WpfAppCanvas_MouseDown(object sender, MouseButtonEventArgs e)

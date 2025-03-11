@@ -1,17 +1,18 @@
-﻿using System.Diagnostics;
+﻿
+using System.Diagnostics;
 using System.Drawing.Imaging;
 using System.Runtime.InteropServices;
+using System.Text;
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Forms.Integration;
 using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Shapes;
 using System.Windows.Threading;
 using WpfAppAITest.Command;
-using WpfAppAITest.Helpers;
-using MessageBox = System.Windows.Forms.MessageBox;
+using Brushes = System.Windows.Media.Brushes;
+using Line = System.Windows.Shapes.Line;
 using Point = System.Windows.Point;
 
 namespace WpfAppAITest.ViewModels
@@ -31,33 +32,62 @@ namespace WpfAppAITest.ViewModels
         static extern bool ShowWindow(IntPtr hWnd, int nCmdShow);
 
 
-        private const int SW_SHOW = 5;
+        // Import the necessary Windows APIs
+        [DllImport("user32.dll", SetLastError = true)]
+        public static extern bool EnumWindows(EnumWindowsProc enumProc, IntPtr lParam);
 
-        private Process _childProcess;
-        private IntPtr _childHandle = IntPtr.Zero;
+        [DllImport("user32.dll", SetLastError = true)]
+        public static extern uint GetWindowThreadProcessId(IntPtr hWnd, out uint lpdwProcessId);
 
-        //private readonly Panel _leftGrid;
-        private readonly Canvas _canvas;
-        private System.Windows.Controls.Image _scrrenImage;
-        private System.Windows.Forms.Panel _winFormsPanel;
+        [DllImport("user32.dll")]
+        public static extern int GetWindowText(IntPtr hWnd, StringBuilder lpString, int nMaxCount);
 
+        // Delegate for EnumWindowsProc
+        public delegate bool EnumWindowsProc(IntPtr hWnd, IntPtr lParam);
 
-        public MainWindowViewModel(Canvas canvas, System.Windows.Controls.Image scrrenImage)
+        // Method to find the window by process ID
+        public static IntPtr FindWindowByProcess(int targetProcessId)
         {
-            _canvas = canvas;
-            _scrrenImage = scrrenImage;
-            _winFormsPanel = new System.Windows.Forms.Panel();
-            
-            //_winFormsHost.Child = _winFormsPanel;
+            IntPtr foundWindowHandle = IntPtr.Zero;
+
+            EnumWindows((hWnd, lParam) =>
+            {
+                uint processId;
+                GetWindowThreadProcessId(hWnd, out processId);
+
+                // Check if the process ID matches the target process ID
+                if (processId == targetProcessId)
+                {
+                    foundWindowHandle = hWnd;
+                    return false; // Stop the enumeration if we find the window
+                }
+
+                return true; // Continue searching
+            }, IntPtr.Zero);
+
+            return foundWindowHandle;
         }
 
-        private DelegateCommand _loadAppCommand;
-        public DelegateCommand LoadAppCommand => _loadAppCommand ??=
-            new DelegateCommand(LoadExternalApplication, _ => true);
+        // Method to find a process by name
+        public static int GetProcessIdByName(string processName)
+        {
+            foreach (var process in Process.GetProcessesByName(processName))
+            {
+                return process.Id;
+            }
+            return -1; // Not found
+        }
+
+        private readonly Canvas _canvas;
+
+        public MainWindowViewModel(Canvas canvas)
+        {
+            _canvas = canvas;
+        }
 
         private DelegateCommand _shareScreenCommand;
         public DelegateCommand ShareScreenCommand => _shareScreenCommand ??=
-            new DelegateCommand(ShareScreen, _ => true);
+            new DelegateCommand(ShareScreen, _ => !ShareScreenCanExecute());
 
         private DelegateCommand _undoCommand;
         public DelegateCommand UndoCommand => _undoCommand ??=
@@ -66,20 +96,24 @@ namespace WpfAppAITest.ViewModels
 
         private DelegateCommand _addScreenshot;
         public DelegateCommand AddScreenshot => _addScreenshot ??=
-            new DelegateCommand(TakeScreenshot, TakeScreenshotCanExecute);
+            new DelegateCommand(TakeScreenshot, _ => ShareScreenCanExecute());
 
         private DelegateCommand _deleteApp;
         public DelegateCommand DeleteAppCommand => _deleteApp ??=
-            new DelegateCommand(DeleteApp, TakeScreenshotCanExecute);
+            new DelegateCommand(StopScreenShare, _ => ShareScreenCanExecute());
 
         private void ShareScreen(object o)
         {
-            _timer = new DispatcherTimer { Interval = TimeSpan.FromMilliseconds(100) };
-            _timer.Tick += (s, e) => _scrrenImage.Source = BitmapToImageSource(_screenCapture.CaptureScreen());
+            _timer = new DispatcherTimer { Interval = TimeSpan.FromSeconds(1) };
+            _timer.Tick += (s, e) => _canvas.Background = new ImageBrush(BitmapToImageSource(_screenCapture.CaptureScreen())); //CaptureWindowClientArea("msedge")
             _timer.Start();
 
-            LabelVisible= Visibility.Collapsed;
+            LabelVisible = Visibility.Collapsed;
+
+            IsScreenCapturing = true;
         }
+        public bool ShareScreenCanExecute() => IsScreenCapturing;
+
 
         private BitmapSource BitmapToImageSource(Bitmap bitmap)
         {
@@ -98,77 +132,64 @@ namespace WpfAppAITest.ViewModels
 
         private void TakeScreenshot(object o)
         {
-            //ScreenShotHelper.CaptureGridAndSetAsBackground(_winFormsHost, _canvas);
+            _timer.Stop();
         }
 
-        private void DeleteApp(object o)
+        private void StopScreenShare(object o)
         {
-            if (_childHandle != IntPtr.Zero)
+            _timer.Stop();
+            _canvas.Background = Brushes.Transparent;
+            LabelVisible = Visibility.Visible;
+
+            IsScreenCapturing = false;
+        }
+
+        private Visibility _labelVisible = Visibility.Visible; // Default is Visible
+
+        public Visibility LabelVisible
+        {
+            get => _labelVisible;
+            set
             {
-                _childProcess.Kill();
-                ChildHandle = IntPtr.Zero;
-                _winFormsPanel.Controls.Clear();
+                _labelVisible = value;
+                OnPropertyChanged();
             }
         }
 
-        private bool TakeScreenshotCanExecute(object o)
+        private bool _isScreenCapturing;
+        public bool IsScreenCapturing
         {
-            return ChildHandle != IntPtr.Zero;
-        }
-
-        public async void LoadExternalApplication(object o)
-        {
-            var exePath = @"C:\Users\CD-LP000026\Desktop\Workshop\WPF appis\DPiTest\bin\Debug\net8.0-windows\DPiTest.exe";
-
-            _childProcess = new Process
+            get => _isScreenCapturing;
+            set
             {
-                StartInfo = new ProcessStartInfo
+                if (_isScreenCapturing != value)
                 {
-                    FileName = exePath,
-                    WindowStyle = ProcessWindowStyle.Hidden
+                    _isScreenCapturing = value;
+                    OnPropertyChanged();
+
+                    ShareScreenCommand.RaiseCanExecuteChanged();
+                    AddScreenshot.RaiseCanExecuteChanged();
+                    DeleteAppCommand.RaiseCanExecuteChanged();
                 }
-            };
-            _childProcess.Start();
-
-            for (int i = 0; i < 10; i++)
-            {
-                _childProcess.WaitForInputIdle();
-                ChildHandle = _childProcess.MainWindowHandle;
-                if (ChildHandle != IntPtr.Zero) break;
-                await Task.Delay(200);
             }
-
-            if (_childHandle == IntPtr.Zero)
-            {
-                MessageBox.Show("Neuspešno dobijanje handle-a prozora aplikacije.");
-                return;
-            }
-
-            // Postavljamo eksternu aplikaciju kao child od WinForms Panel-a
-            SetParent(ChildHandle, _winFormsPanel.Handle);
-
-            // Uklanjamo naslovnu traku prozora
-            int style = NativeMethods.GetWindowLong(ChildHandle, NativeMethods.GWL_STYLE);
-            NativeMethods.SetWindowLong(_childHandle, NativeMethods.GWL_STYLE, style & ~NativeMethods.WS_CAPTION);
-
-            // Postavimo veličinu aplikacije na veličinu panela
-            ResizeEmbeddedApp();
-
-            ShowWindow(ChildHandle, SW_SHOW);
         }
 
-        public void ResizeEmbeddedApp()
+        public static class NativeMethods // Promenili smo iz 'internal' u 'public'
         {
-            if (_childHandle == IntPtr.Zero) return;
-            var width = _winFormsPanel.ClientSize.Width;
-            var height = _winFormsPanel.ClientSize.Height;
+            // Za rad sa stilovima prozora
+            public const int GWL_STYLE = -16;
+            public const int WS_CAPTION = 0x00C00000;
 
-            if (width > 0 && height > 0)
-            {
-                MoveWindow(_childHandle, 0, 0, width, height, true);
-                _winFormsPanel.Invalidate();
-            }
+            // P/Invoke za GetWindowLong (dohvatanje stila prozora)
+            [DllImport("user32.dll", SetLastError = true)]
+            public static extern int GetWindowLong(IntPtr hWnd, int nIndex);
+
+            // P/Invoke za SetWindowLong (postavljanje stila prozora)
+            [DllImport("user32.dll", SetLastError = true)]
+            public static extern int SetWindowLong(IntPtr hWnd, int nIndex, int dwNewLong);
         }
+
+
 
         private Point _lineStartPoint;  // Početna tačka linije
         private Point _lineEndPoint;    // Krajna tačka linije
@@ -185,7 +206,7 @@ namespace WpfAppAITest.ViewModels
             }
             else if (IsRactangeDrawing)
             {
-                // Draw rectangle
+                DrawRectangle(sender, e);
             }
         }
 
@@ -209,7 +230,7 @@ namespace WpfAppAITest.ViewModels
                     Y1 = _lineStartPoint.Y,
                     X2 = _lineEndPoint.X,
                     Y2 = _lineEndPoint.Y,
-                    Stroke = System.Windows.Media.Brushes.Black,
+                    Stroke = System.Windows.Media.Brushes.Red,
                     StrokeThickness = 2
                 };
 
@@ -242,7 +263,7 @@ namespace WpfAppAITest.ViewModels
                     Y1 = _lineStartPoint.Y,
                     X2 = _lineEndPoint.X,
                     Y2 = _lineEndPoint.Y,
-                    Stroke = System.Windows.Media.Brushes.Black,
+                    Stroke = System.Windows.Media.Brushes.Red,
                     StrokeEndLineCap = PenLineCap.Triangle,
                     StrokeThickness = 2
                 };
@@ -287,7 +308,7 @@ namespace WpfAppAITest.ViewModels
             Polygon arrowhead = new Polygon
             {
                 Points = new PointCollection { arrowPoint1, end, arrowPoint2 },
-                Fill = System.Windows.Media.Brushes.Black
+                Fill = System.Windows.Media.Brushes.Red
             };
 
             // Add the arrowhead to the Canvas
@@ -315,7 +336,7 @@ namespace WpfAppAITest.ViewModels
                 {
                     Width = width,
                     Height = height,
-                    Stroke = System.Windows.Media.Brushes.Black,
+                    Stroke = System.Windows.Media.Brushes.Red,
                     StrokeThickness = 2
                 };
 
@@ -345,19 +366,6 @@ namespace WpfAppAITest.ViewModels
                     IsRactangeDrawing = false;
                 }
                 OnPropertyChanged(nameof(IsLineDrawing));
-            }
-        }
-
-        public IntPtr ChildHandle
-        {
-            get => _childHandle;
-            set
-            {
-                _childHandle = value;
-
-                OnPropertyChanged(nameof(ChildHandle));
-                AddScreenshot.RaiseCanExecuteChanged();
-                DeleteAppCommand.RaiseCanExecuteChanged();
             }
         }
 
@@ -397,68 +405,102 @@ namespace WpfAppAITest.ViewModels
                 OnPropertyChanged(nameof(IsRactangeDrawing));
             }
         }
-
-
-        public static class NativeMethods // Promenili smo iz 'internal' u 'public'
-        {
-            // Za rad sa stilovima prozora
-            public const int GWL_STYLE = -16;
-            public const int WS_CAPTION = 0x00C00000;
-
-            // P/Invoke za GetWindowLong (dohvatanje stila prozora)
-            [DllImport("user32.dll", SetLastError = true)]
-            public static extern int GetWindowLong(IntPtr hWnd, int nIndex);
-
-            // P/Invoke za SetWindowLong (postavljanje stila prozora)
-            [DllImport("user32.dll", SetLastError = true)]
-            public static extern int SetWindowLong(IntPtr hWnd, int nIndex, int dwNewLong);
-        }
-
-        private Visibility _hostVisibility = Visibility.Visible; // Default is Visible
-
-        public Visibility HostVisibility
-        {
-            get => _hostVisibility;
-            set
-            {
-                _hostVisibility = value;
-                OnPropertyChanged();
-                
-                OnPropertyChanged(nameof(LabelVisible));// Notify UI
-            }
-        }
-
-        private Visibility _labelVisible = Visibility.Visible; // Default is Visible
-
-        public Visibility LabelVisible
-        {
-            get => _labelVisible;
-            set
-            {
-                _labelVisible = value;
-                OnPropertyChanged();
-            }
-        }
-
-        private void ToggleHostVisibility()
-        {
-            if (HostVisibility == Visibility.Visible)
-            {
-                HostVisibility = Visibility.Collapsed;
-            }
-            else
-            {
-                HostVisibility = Visibility.Visible;
-            }
-
-        }
     }
 
     public class ScreenCapture
     {
+        [DllImport("user32.dll")]
+        private static extern IntPtr GetDC(IntPtr hWnd);
+
+        [DllImport("user32.dll")]
+        private static extern int ReleaseDC(IntPtr hWnd, IntPtr hDC);
+
+        [DllImport("gdi32.dll")]
+        private static extern bool BitBlt(IntPtr hdcDest, int xDest, int yDest, int width, int height,
+                                          IntPtr hdcSrc, int xSrc, int ySrc, CopyPixelOperation rop);
+
+        [DllImport("gdi32.dll")]
+        private static extern IntPtr CreateCompatibleDC(IntPtr hdc);
+
+        [DllImport("gdi32.dll")]
+        private static extern IntPtr CreateCompatibleBitmap(IntPtr hdc, int width, int height);
+
+        [DllImport("gdi32.dll")]
+        private static extern IntPtr SelectObject(IntPtr hdc, IntPtr h);
+
+        [DllImport("gdi32.dll")]
+        private static extern bool DeleteObject(IntPtr hObject);
+
+        [DllImport("gdi32.dll")]
+        private static extern bool DeleteDC(IntPtr hdc);
+
+        [DllImport("user32.dll")]
+        private static extern bool GetWindowRect(IntPtr hWnd, out RECT lpRect);
+
+        [DllImport("user32.dll")]
+        private static extern bool GetClientRect(IntPtr hWnd, out RECT lpRect);
+
+        [DllImport("user32.dll")]
+        private static extern bool ClientToScreen(IntPtr hWnd, ref POINT lpPoint);
+
+        [StructLayout(LayoutKind.Sequential)]
+        private struct RECT
+        {
+            public int Left, Top, Right, Bottom;
+        }
+
+        [StructLayout(LayoutKind.Sequential)]
+        private struct POINT
+        {
+            public int X, Y;
+        }
+
+        public Bitmap CaptureWindowClientArea(string processName)
+        {
+            Process[] processes = Process.GetProcessesByName(processName);
+            if (processes.Length == 0)
+                return null;
+
+            IntPtr hWnd = processes[0].MainWindowHandle;
+            if (hWnd == IntPtr.Zero)
+                return null;
+
+            if (!GetClientRect(hWnd, out RECT clientRect))
+                return null;
+
+            POINT clientPoint = new POINT { X = clientRect.Left, Y = clientRect.Top };
+            ClientToScreen(hWnd, ref clientPoint);
+
+            int width = clientRect.Right - clientRect.Left;
+            int height = clientRect.Bottom - clientRect.Top;
+
+            IntPtr hdcWindow = GetDC(hWnd);
+            IntPtr hdcMemDC = CreateCompatibleDC(hdcWindow);
+            IntPtr hBitmap = CreateCompatibleBitmap(hdcWindow, width, height);
+            IntPtr hOld = SelectObject(hdcMemDC, hBitmap);
+
+            //var interopWindow = new WindowInteropHelper(this);
+            //IntPtr hwnd = interopWindow.Handle;
+            //var picker = new GraphicsCapturePicker();
+            //var window = picker.As<IInitializeWithWindow>();
+            //window.Initialize(hwnd);
+            //var item = await picker.PickSingleItemAsync();
+
+            //BitBlt(hdcMemDC, 0, 0, width, height, hdcWindow, clientPoint.X, clientPoint.Y, CopyPixelOperation.SourceCopy);
+            BitBlt(hdcMemDC, 0, 0, width, height, hdcWindow, 0, 0,
+       CopyPixelOperation.SourceCopy | CopyPixelOperation.CaptureBlt);
+            Bitmap bmp = System.Drawing.Image.FromHbitmap(hBitmap);
+
+            SelectObject(hdcMemDC, hOld);
+            DeleteObject(hBitmap);
+            DeleteDC(hdcMemDC);
+            ReleaseDC(hWnd, hdcWindow);
+
+            return bmp;
+        }
         public Bitmap CaptureScreen()
         {
-            var bounds = System.Windows.Forms.Screen.PrimaryScreen.Bounds;
+            var bounds = Screen.AllScreens.LastOrDefault().Bounds;
             var bitmap = new Bitmap(bounds.Width, bounds.Height);
             using (var g = Graphics.FromImage(bitmap))
             {
