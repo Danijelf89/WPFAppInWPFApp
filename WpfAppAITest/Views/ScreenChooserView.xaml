@@ -7,7 +7,7 @@
         mc:Ignorable="d"
         SizeToContent ="Height"
         WindowStartupLocation="CenterOwner"
-        Width="300"
+        Width="500"
         Title="Select a screen"
         Name="Window">
     <Grid>
@@ -20,10 +20,30 @@
             <ColumnDefinition Width="*" />
             <!--<ColumnDefinition Width="Auto" />-->
         </Grid.ColumnDefinitions>
-        <ComboBox ItemsSource="{Binding Screens, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
-                  SelectedItem="{Binding SelectedScreen}" Width="200" DisplayMemberPath="Name" Margin="10"
-                  VerticalAlignment="Center" HorizontalAlignment="Center"></ComboBox>
-
+<Border BorderBrush="Black" BorderThickness="2" Margin="2">
+        <ListBox Name="IconsListBox" Grid.Row="0" Grid.Column="0"  VerticalContentAlignment="Stretch" Margin="5"
+                 Width="500"
+                 Height="250"
+                 HorizontalAlignment="Stretch" 
+                 
+                 VerticalAlignment="Top" 
+                 ScrollViewer.VerticalScrollBarVisibility="Auto"
+                 ScrollViewer.HorizontalScrollBarVisibility="Disabled"
+                 ItemsSource="{Binding Screens}"
+                 SelectedItem="{Binding SelectedScreen, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                 >
+            <ListBox.ItemsPanel>
+                <ItemsPanelTemplate>
+                    <WrapPanel Orientation="Horizontal" />
+                </ItemsPanelTemplate>
+            </ListBox.ItemsPanel>
+            <ListBox.ItemTemplate>
+                <DataTemplate>
+                    <Image Source="{Binding Image}" Width="100" Height="100" Margin="5"/>
+                </DataTemplate>
+            </ListBox.ItemTemplate>
+        </ListBox>
+</Border>
         <StackPanel Grid.Row="1" Orientation="Horizontal" HorizontalAlignment="Right" Margin="5">
             <Button Margin="5" Command="{Binding SelectWindowCommand}" CommandParameter="{Binding ElementName=Window}">Select</Button>
             <Button Command="{Binding CloseWindowCommand}" CommandParameter="{Binding ElementName=Window}">Close</Button>
