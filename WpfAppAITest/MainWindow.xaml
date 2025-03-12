@@ -16,191 +16,147 @@
         Closing="MainWindow_OnClosing"
         >
     <Grid Margin="5">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"></RowDefinition>
+            <RowDefinition Height="*"></RowDefinition>
+            <RowDefinition Height="*"></RowDefinition>
+        </Grid.RowDefinitions>
         <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="6*" />
-            <!-- 60% -->
-            <ColumnDefinition Width="4*" />
-            <!-- 40% -->
+            <ColumnDefinition Width="*" />
+            <ColumnDefinition Width="*" />
         </Grid.ColumnDefinitions>
-        <Border BorderBrush="Transparent" BorderThickness="1" Grid.Column="0" Margin="0">
+
+        <Grid.Resources>
+            <Style TargetType="{x:Type Button}" x:Key="formatTextStyle">
+                <Setter Property="FontFamily" Value="Palatino Linotype"></Setter>
+                <Setter Property="Width" Value="30"></Setter>
+                <Setter Property="FontSize" Value ="14"></Setter>
+                <Setter Property="CommandTarget" Value="{Binding ElementName=mainRTB}"></Setter>
+            </Style>
+
+            <Style TargetType="{x:Type Button}" x:Key="formatImageStyle">
+                <Setter Property="Width" Value="30"></Setter>
+                <Setter Property="CommandTarget" Value="{Binding ElementName=mainRTB}"></Setter>
+            </Style>
+        </Grid.Resources>
+
+        <Border BorderBrush="Transparent" BorderThickness="1" Grid.Column="0" Grid.Row="0" HorizontalAlignment="Stretch" Margin="5,0,0,0" CornerRadius="10" Background="White">
+            <Border.Effect>
+                <DropShadowEffect Color="Black" BlurRadius="10" ShadowDepth="5" Opacity="0.2"/>
+            </Border.Effect>
+            <ToolBar Background="Transparent">
+                <ToggleButton Style="{DynamicResource MaterialDesignFloatingActionLightButton}" Width="30" Height="30"  Margin="10"  IsChecked="{Binding IsLineDrawing, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}">
+                    <materialDesign:PackIcon Kind="VectorLine" Width="20" Height="20"/>
+                </ToggleButton>
+                <ToggleButton Style="{DynamicResource MaterialDesignFloatingActionLightButton}" Width="30" Height="30"  Margin="10" IsChecked="{Binding IsArrowDrawing, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}">
+                    <materialDesign:PackIcon Kind="ArrowTopRight" Width="20" Height="20"/>
+                </ToggleButton>
+                <ToggleButton Style="{DynamicResource MaterialDesignFloatingActionLightButton}" Width="30" Height="30"   Margin="10" IsChecked="{Binding IsRactangeDrawing, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}">
+                    <materialDesign:PackIcon Kind="RectangleOutline" Width="20" Height="20"/>
+                </ToggleButton>
+                <ToggleButton Style="{DynamicResource MaterialDesignFloatingActionLightButton}"  Width="30" Height="30"  Margin="10" IsChecked="{Binding IsRactangeDrawing, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}">
+                    <materialDesign:PackIcon Kind="FormatLetterCase" Width="20" Height="20"/>
+                </ToggleButton>
+                <Button Style="{DynamicResource MaterialDesignFloatingActionLightButton}"  Width="30" Height="30"  Margin="10"  Command="{Binding UndoCommand}">
+                    <materialDesign:PackIcon Kind="UndoVariant" Width="20" Height="20"/>
+                </Button>
+            </ToolBar>
+        </Border>
+
+        <Border BorderBrush="Transparent" BorderThickness=" 1"  Grid.Column="1" Grid.Row="0" HorizontalAlignment="Stretch" Margin="0,0,5,0" CornerRadius="10" Background="White">
+            <Border.Effect>
+                <DropShadowEffect Color="Black" BlurRadius="10" ShadowDepth="5" Opacity="0.2"/>
+            </Border.Effect>
+                <ToolBar Background="Transparent">
+                    <Button Style="{DynamicResource MaterialDesignFloatingActionButton}" Width="30" Height="30" Command="{Binding ShareScreenCommand}"  Margin="10">
+                        <materialDesign:PackIcon Kind="Play" Width="20" Height="20"/>
+                    </Button>
+                    <Button Style="{DynamicResource MaterialDesignFloatingActionButton}" Width="30" Height="30" Command="{Binding DeleteAppCommand}"  Margin="10">
+                        <materialDesign:PackIcon Kind="Stop" Width="20" Height="20"/>
+                    </Button>
+                    <Button Style="{DynamicResource MaterialDesignFloatingActionButton}" Width="30" Height="30" Command="{Binding AddScreenshot}"   Margin="10">
+                        <materialDesign:PackIcon Kind="Camera" Width="20" Height="20"/>
+                    </Button>
+                    <Button Style="{DynamicResource MaterialDesignFloatingActionButton}" Width="30" Height="30" Command="{Binding ClearScreenshot}"   Margin="10">
+                        <materialDesign:PackIcon Kind="CameraOff" Width="20" Height="20"/>
+                    </Button>
+                </ToolBar>
+        </Border>
+
+        <Border Grid.Row="1" Grid.Column="0" BorderBrush="Transparent" BorderThickness="1"  Margin="5" CornerRadius="0" Background="White">
             <Grid>
-                <Grid.RowDefinitions>
-                    <RowDefinition Height="Auto"/>
-                    <RowDefinition Height="*" />
-                    <RowDefinition Height="200"/>
-                </Grid.RowDefinitions>
-                <Border BorderBrush="Transparent" BorderThickness="1" Grid.Row="0" Margin="5" CornerRadius="10">
-                    <Grid>
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="*" />
-                            <ColumnDefinition Width="*" />
-                        </Grid.ColumnDefinitions>
-
-                        <Border BorderBrush="Transparent" BorderThickness="1" Grid.Column="0" Margin="0,0,5,0" CornerRadius="10" Background="White">
-                            <Border.Effect>
-                                <DropShadowEffect Color="Black" BlurRadius="10" ShadowDepth="5" Opacity="0.2"/>
-                            </Border.Effect>
-                            <Grid>
-                                <ToolBar Background="Transparent">
-                                    <Button Style="{DynamicResource MaterialDesignFloatingActionButton}" Width="30" Height="30" Command="{Binding ShareScreenCommand}"  Margin="10">
-                                        <materialDesign:PackIcon Kind="Play" Width="20" Height="20"/>
-                                </Button>
-                                    <Button Style="{DynamicResource MaterialDesignFloatingActionButton}" Width="30" Height="30" Command="{Binding DeleteAppCommand}"  Margin="10">
-                                    <materialDesign:PackIcon Kind="Stop" Width="20" Height="20"/>
-                                </Button>
-                                    <Button Style="{DynamicResource MaterialDesignFloatingActionButton}" Width="30" Height="30" Command="{Binding AddScreenshot}"   Margin="10">
-                                    <materialDesign:PackIcon Kind="Camera" Width="20" Height="20"/>
-                                </Button>
-                                    <Button Style="{DynamicResource MaterialDesignFloatingActionButton}" Width="30" Height="30" Command="{Binding ClearScreenshot}"   Margin="10">
-                                    <materialDesign:PackIcon Kind="CameraOff" Width="20" Height="20"/>
-                                </Button>
-                                </ToolBar>
-                            </Grid>
-                        </Border>
-                        <Border BorderBrush="Transparent" BorderThickness="1" Grid.Column="1" Margin="5,0,0,0" CornerRadius="10" Background="White">
-                            <Border.Effect>
-                                <DropShadowEffect Color="Black" BlurRadius="10" ShadowDepth="5" Opacity="0.2"/>
-                            </Border.Effect>
-                           <ToolBar Background="Transparent">
-                                <ToggleButton Style="{DynamicResource MaterialDesignFloatingActionLightButton}" Width="30" Height="30"  Margin="10"  IsChecked="{Binding IsLineDrawing, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}">
-                                    <materialDesign:PackIcon Kind="VectorLine" Width="20" Height="20"/>
-                                </ToggleButton>
-                                <ToggleButton Style="{DynamicResource MaterialDesignFloatingActionLightButton}" Width="30" Height="30"  Margin="10" IsChecked="{Binding IsArrowDrawing, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}">
-                                    <materialDesign:PackIcon Kind="ArrowTopRight" Width="20" Height="20"/>
-                                </ToggleButton>
-                                <ToggleButton Style="{DynamicResource MaterialDesignFloatingActionLightButton}" Width="30" Height="30"   Margin="10" IsChecked="{Binding IsRactangeDrawing, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}">
-                                    <materialDesign:PackIcon Kind="RectangleOutline" Width="20" Height="20"/>
-                                </ToggleButton>
-                                <ToggleButton Style="{DynamicResource MaterialDesignFloatingActionLightButton}"  Width="30" Height="30"  Margin="10" IsChecked="{Binding IsRactangeDrawing, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}">
-                                    <materialDesign:PackIcon Kind="FormatLetterCase" Width="20" Height="20"/>
-                                </ToggleButton>
-                                <Button Style="{DynamicResource MaterialDesignFloatingActionLightButton}"  Width="30" Height="30"  Margin="10"  Command="{Binding UndoCommand}">
-                                    <materialDesign:PackIcon Kind="UndoVariant" Width="20" Height="20"/>
-                                </Button>
-                           </ToolBar>
-                        </Border>
-                    </Grid>
-
-                </Border>
-                <Border BorderBrush="Transparent" BorderThickness="1" Grid.Row="1" Margin="5" CornerRadius="0" Background="White">
-                    <Border.Effect>
-                        <DropShadowEffect Color="Black" BlurRadius="10" ShadowDepth="5" Opacity="0.2"/>
-                    </Border.Effect>
-                    <Grid>
-                        <Image x:Name="ScreenImage" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Margin="0"  ClipToBounds="True" SnapsToDevicePixels="True"  Visibility="{Binding HostVisibility}">
-
-                        </Image>
-                        <!--<wv2:WebView2 Name="webView" Source="https://www.google.com"/>-->
-                        <TextBlock Text="Please load your application!" VerticalAlignment="Center" HorizontalAlignment="Center" Visibility="{Binding LabelVisible, UpdateSourceTrigger=PropertyChanged}"/>
-                        <Canvas Name="WpfAppCanvas" HorizontalAlignment="Stretch" Background="Transparent" MouseDown="WpfAppCanvas_MouseDown" Margin="0"/>
-                    </Grid>
-                </Border>
-                <Border BorderBrush="Transparent" BorderThickness="1" Grid.Row="2" Margin="5" Background="White">
-                    <Border.Effect>
-                        <DropShadowEffect Color="Black" BlurRadius="10" ShadowDepth="5" Opacity="0.2"/>
-                    </Border.Effect>
-                    <Grid>
-
-                        <!-- Set the styles for the tool bar. -->
-                        <Grid.Resources>
-                            <Style TargetType="{x:Type Button}" x:Key="formatTextStyle">
-                                <Setter Property="FontFamily" Value="Palatino Linotype"></Setter>
-                                <Setter Property="Width" Value="30"></Setter>
-                                <Setter Property="FontSize" Value ="14"></Setter>
-                                <Setter Property="CommandTarget" Value="{Binding ElementName=mainRTB}"></Setter>
-                            </Style>
-
-                            <Style TargetType="{x:Type Button}" x:Key="formatImageStyle">
-                                <Setter Property="Width" Value="30"></Setter>
-                                <Setter Property="CommandTarget" Value="{Binding ElementName=mainRTB}"></Setter>
-                            </Style>
-                        </Grid.Resources>
-
-                        <DockPanel Name="mainPanel">
-
-                            <!-- This tool bar contains all the editing buttons. -->
-                            <ToolBar Name="mainToolBar" Height="30" DockPanel.Dock="Top" Background="White">
-
-                                <Button Style="{StaticResource formatImageStyle}" Command="ApplicationCommands.Cut" ToolTip="Cut">
-                                    <materialDesign:PackIcon Kind="ContentCut" Width="16" Height="16"/>
-                                </Button>
-                                <Button Style="{StaticResource formatImageStyle}" Command="ApplicationCommands.Copy" ToolTip="Copy">
-                                    <materialDesign:PackIcon Kind="ContentCopy" Width="16" Height="16"/>
-                                </Button>
-                                <Button Style="{StaticResource formatImageStyle}" Command="ApplicationCommands.Paste" ToolTip="Paste">
-                                    <materialDesign:PackIcon Kind="ContentPaste" Width="16" Height="16"/>
-                                </Button>
-                                <Button Style="{StaticResource formatImageStyle}" Command="ApplicationCommands.Undo" ToolTip="Undo">
-                                    <materialDesign:PackIcon Kind="Undo" Width="16" Height="16"/>
-                                </Button>
-                                <Button Style="{StaticResource formatImageStyle}" Command="ApplicationCommands.Redo" ToolTip="Redo">
-                                    <materialDesign:PackIcon Kind="Redo" Width="16" Height="16"/>
-                                </Button>
-
-                                <Button Style="{StaticResource formatTextStyle}" Command="EditingCommands.ToggleBold" ToolTip="Bold">
-                                    <TextBlock FontWeight="Bold">B</TextBlock>
-                                </Button>
-                                <Button Style="{StaticResource formatTextStyle}" Command="EditingCommands.ToggleItalic" ToolTip="Italic">
-                                    <TextBlock FontStyle="Italic" FontWeight="Bold">I</TextBlock>
-                                </Button>
-                                <Button Style="{StaticResource formatTextStyle}" Command="EditingCommands.ToggleUnderline" ToolTip="Underline">
-                                    <TextBlock TextDecorations="Underline" FontWeight="Bold">U</TextBlock>
-                                </Button>
-                                <Button Style="{StaticResource formatImageStyle}" Command="EditingCommands.IncreaseFontSize" ToolTip="Grow Font">
-                                    <materialDesign:PackIcon Kind="FormatFontSizeIncrease" Width="16" Height="16"/>
-                                </Button>
-                                <Button Style="{StaticResource formatImageStyle}" Command="EditingCommands.DecreaseFontSize" ToolTip="Shrink Font">
-                                    <materialDesign:PackIcon Kind="FormatFontSizeDecrease" Width="16" Height="16"/>
-                                </Button>
-
-                                <Button Style="{StaticResource formatImageStyle}" Command="EditingCommands.ToggleBullets" ToolTip="Bullets">
-                                    <materialDesign:PackIcon Kind="DotsVertical" Width="16" Height="16"/>
-                                </Button>
-                                <Button Style="{StaticResource formatImageStyle}" Command="EditingCommands.ToggleNumbering" ToolTip="Numbering">
-                                    <materialDesign:PackIcon Kind="Numeric" Width="16" Height="16"/>
-                                </Button>
-                                <Button Style="{StaticResource formatImageStyle}" Command="EditingCommands.AlignLeft" ToolTip="Align Left">
-                                    <materialDesign:PackIcon Kind="FormatAlignLeft" Width="16" Height="16"/>
-                                </Button>
-                                <Button Style="{StaticResource formatImageStyle}" Command="EditingCommands.AlignCenter" ToolTip="Align Center">
-                                    <materialDesign:PackIcon Kind="FormatAlignCenter" Width="16" Height="16"/>
-                                </Button>
-                                <Button Style="{StaticResource formatImageStyle}" Command="EditingCommands.AlignRight" ToolTip="Align Right">
-                                    <materialDesign:PackIcon Kind="FormatAlignRight" Width="16" Height="16"/>
-                                </Button>
-                                <Button Style="{StaticResource formatImageStyle}" Command="EditingCommands.AlignJustify" ToolTip="Align Justify">
-                                    <materialDesign:PackIcon Kind="FormatAlignJustify" Width="16" Height="16"/>
-                                </Button>
-                                <Button Style="{StaticResource formatImageStyle}" Command="EditingCommands.IncreaseIndentation" ToolTip="Increase Indent">
-                                    <materialDesign:PackIcon Kind="FormatIndentIncrease" Width="16" Height="16"/>
-                                </Button>
-                                <Button Style="{StaticResource formatImageStyle}" Command="EditingCommands.DecreaseIndentation" ToolTip="Decrease Indent">
-                                    <materialDesign:PackIcon Kind="FormatIndentDecrease" Width="16" Height="16"/>
-                                </Button>
-
-                            </ToolBar>
-                            <RichTextBox Name="mainRTB" AcceptsTab="True" VerticalContentAlignment="Top" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Auto" Padding="20"></RichTextBox>
-                        </DockPanel>
-                    </Grid>
-                </Border>
+                <TextBlock  Text="Please take screenshot!" VerticalAlignment="Center" HorizontalAlignment="Center" Visibility="{Binding ScrenshhotLabelVisible, UpdateSourceTrigger=PropertyChanged}"/>
+                <Canvas  Name="WpfAppCanvas" HorizontalAlignment="Stretch" Background="Transparent" MouseDown="WpfAppCanvas_MouseDown" Margin="0"/>
             </Grid>
         </Border>
-        <Border BorderBrush="Transparent" BorderThickness="1" Grid.Column="1" Margin="0">
-            <Grid>
-                <Grid.RowDefinitions>
-                    <RowDefinition Height="*" />
-                </Grid.RowDefinitions>
 
-                <Border BorderBrush="Transparent" BorderThickness="1" Grid.Row="0" Margin="5" CornerRadius="10" Background="White">
-                    <Border.Effect>
-                        <DropShadowEffect Color="Black" BlurRadius="10" ShadowDepth="5" Opacity="0.2"/>
-                    </Border.Effect>
-                    <Grid>
-                        <TextBlock Text="Dokument" VerticalAlignment="Center" HorizontalAlignment="Center"/>
-                    </Grid>
-                </Border>
+        <Border BorderBrush="Transparent" Grid.Column="0" BorderThickness="1" Grid.Row="2" Margin="5" Background="White">
+            <Border.Effect>
+                <DropShadowEffect Color="Black" BlurRadius="10" ShadowDepth="5" Opacity="0.2"/>
+            </Border.Effect>
+        <DockPanel >
+            <ToolBar Height="30" DockPanel.Dock="Top" Background="White">
+                <Button Style="{StaticResource formatImageStyle}" Command="ApplicationCommands.Cut" ToolTip="Cut">
+                    <materialDesign:PackIcon Kind="ContentCut" Width="16" Height="16"/>
+                </Button>
+                <Button Style="{StaticResource formatImageStyle}" Command="ApplicationCommands.Copy" ToolTip="Copy">
+                    <materialDesign:PackIcon Kind="ContentCopy" Width="16" Height="16"/>
+                </Button>
+                <Button Style="{StaticResource formatImageStyle}" Command="ApplicationCommands.Paste" ToolTip="Paste">
+                    <materialDesign:PackIcon Kind="ContentPaste" Width="16" Height="16"/>
+                </Button>
+                <Button Style="{StaticResource formatImageStyle}" Command="ApplicationCommands.Undo" ToolTip="Undo">
+                    <materialDesign:PackIcon Kind="Undo" Width="16" Height="16"/>
+                </Button>
+                <Button Style="{StaticResource formatImageStyle}" Command="ApplicationCommands.Redo" ToolTip="Redo">
+                    <materialDesign:PackIcon Kind="Redo" Width="16" Height="16"/>
+                </Button>
+                <Button Style="{StaticResource formatTextStyle}" Command="EditingCommands.ToggleBold" ToolTip="Bold">
+                    <TextBlock FontWeight="Bold">B</TextBlock>
+                </Button>
+                <Button Style="{StaticResource formatTextStyle}" Command="EditingCommands.ToggleItalic" ToolTip="Italic">
+                    <TextBlock FontStyle="Italic" FontWeight="Bold">I</TextBlock>
+                </Button>
+                <Button Style="{StaticResource formatTextStyle}" Command="EditingCommands.ToggleUnderline" ToolTip="Underline">
+                    <TextBlock TextDecorations="Underline" FontWeight="Bold">U</TextBlock>
+                </Button>
+                <Button Style="{StaticResource formatImageStyle}" Command="EditingCommands.IncreaseFontSize" ToolTip="Grow Font">
+                    <materialDesign:PackIcon Kind="FormatFontSizeIncrease" Width="16" Height="16"/>
+                </Button>
+                <Button Style="{StaticResource formatImageStyle}" Command="EditingCommands.DecreaseFontSize" ToolTip="Shrink Font">
+                    <materialDesign:PackIcon Kind="FormatFontSizeDecrease" Width="16" Height="16"/>
+                </Button>
+                <Button Style="{StaticResource formatImageStyle}" Command="EditingCommands.ToggleBullets" ToolTip="Bullets">
+                    <materialDesign:PackIcon Kind="DotsVertical" Width="16" Height="16"/>
+                </Button>
+                <Button Style="{StaticResource formatImageStyle}" Command="EditingCommands.ToggleNumbering" ToolTip="Numbering">
+                    <materialDesign:PackIcon Kind="Numeric" Width="16" Height="16"/>
+                </Button>
+                <Button Style="{StaticResource formatImageStyle}" Command="EditingCommands.AlignLeft" ToolTip="Align Left">
+                    <materialDesign:PackIcon Kind="FormatAlignLeft" Width="16" Height="16"/>
+                </Button>
+                <Button Style="{StaticResource formatImageStyle}" Command="EditingCommands.AlignCenter" ToolTip="Align Center">
+                    <materialDesign:PackIcon Kind="FormatAlignCenter" Width="16" Height="16"/>
+                </Button>
+                <Button Style="{StaticResource formatImageStyle}" Command="EditingCommands.AlignRight" ToolTip="Align Right">
+                    <materialDesign:PackIcon Kind="FormatAlignRight" Width="16" Height="16"/>
+                </Button>
+                <Button Style="{StaticResource formatImageStyle}" Command="EditingCommands.AlignJustify" ToolTip="Align Justify">
+                    <materialDesign:PackIcon Kind="FormatAlignJustify" Width="16" Height="16"/>
+                </Button>
+                <Button Style="{StaticResource formatImageStyle}" Command="EditingCommands.IncreaseIndentation" ToolTip="Increase Indent">
+                    <materialDesign:PackIcon Kind="FormatIndentIncrease" Width="16" Height="16"/>
+                </Button>
+                <Button Style="{StaticResource formatImageStyle}" Command="EditingCommands.DecreaseIndentation" ToolTip="Decrease Indent">
+                    <materialDesign:PackIcon Kind="FormatIndentDecrease" Width="16" Height="16"/>
+                </Button>
+            </ToolBar>
+            <RichTextBox Name="mainRTB" AcceptsTab="True" VerticalContentAlignment="Top" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Auto" Padding="20"></RichTextBox>
+        </DockPanel>
+    </Border>
 
-            </Grid>
-        </Border>
+        <TextBlock Grid.Row="1" Grid.Column="1"  Text="Start sharing to view window!" VerticalAlignment="Center" HorizontalAlignment="Center" Grid.RowSpan="2" Visibility="{Binding LabelVisible, UpdateSourceTrigger=PropertyChanged}"/>
+        <Image Grid.Row="1" Grid.Column="1" x:Name="ScreenImage" HorizontalAlignment="Stretch" Grid.RowSpan="2" VerticalAlignment="Stretch" Margin="5"  ClipToBounds="True" SnapsToDevicePixels="True"  Visibility="{Binding HostVisibility}">
+        </Image>
     </Grid>
 </Window>

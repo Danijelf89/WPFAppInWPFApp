@@ -12,8 +12,10 @@ using System.Windows.Shapes;
 using System.Windows.Threading;
 using WpfAppAITest.Command;
 using Brushes = System.Windows.Media.Brushes;
+using Image = System.Drawing.Image;
 using Line = System.Windows.Shapes.Line;
 using Point = System.Windows.Point;
+
 
 namespace WpfAppAITest.ViewModels
 {
@@ -22,16 +24,9 @@ namespace WpfAppAITest.ViewModels
         private  DispatcherTimer _timer;
         private readonly ScreenCapture _screenCapture = new();
 
-        [DllImport("user32.dll")]
-        static extern IntPtr SetParent(IntPtr hWndChild, IntPtr hWndNewParent);
+        private System.Windows.Controls.Image _shareImage;
 
-        [DllImport("user32.dll", SetLastError = true)]
-        static extern bool MoveWindow(IntPtr hWnd, int X, int Y, int nWidth, int nHeight, bool bRepaint);
-
-        [DllImport("user32.dll", SetLastError = true)]
-        static extern bool ShowWindow(IntPtr hWnd, int nCmdShow);
-
-
+        
         // Import the necessary Windows APIs
         [DllImport("user32.dll", SetLastError = true)]
         public static extern bool EnumWindows(EnumWindowsProc enumProc, IntPtr lParam);
@@ -50,7 +45,7 @@ namespace WpfAppAITest.ViewModels
         {
             IntPtr foundWindowHandle = IntPtr.Zero;
 
-            EnumWindows((hWnd, lParam) =>
+            EnumWindows((hWnd, _) =>
             {
                 uint processId;
                 GetWindowThreadProcessId(hWnd, out processId);
@@ -80,9 +75,10 @@ namespace WpfAppAITest.ViewModels
 
         private readonly Canvas _canvas;
 
-        public MainWindowViewModel(Canvas canvas)
+        public MainWindowViewModel(Canvas canvas, System.Windows.Controls.Image shareImage)
         {
             _canvas = canvas;
+            _shareImage = shareImage;
         }
 
         private DelegateCommand _shareScreenCommand;
@@ -105,10 +101,11 @@ namespace WpfAppAITest.ViewModels
         private void ShareScreen(object o)
         {
             _timer = new DispatcherTimer { Interval = TimeSpan.FromSeconds(1) };
-            _timer.Tick += (s, e) => _canvas.Background = new ImageBrush(BitmapToImageSource(_screenCapture.CaptureScreen())); //CaptureWindowClientArea("msedge")
+            _timer.Tick += (_, _) => _shareImage.Source = BitmapToImageSource(_screenCapture.CaptureScreen()); //CaptureWindowClientArea("msedge")
             _timer.Start();
 
             LabelVisible = Visibility.Collapsed;
+
 
             IsScreenCapturing = true;
         }
@@ -133,12 +130,13 @@ namespace WpfAppAITest.ViewModels
         private void TakeScreenshot(object o)
         {
             _timer.Stop();
+            ScrenshhotLabelVisible = Visibility.Collapsed;
         }
 
         private void StopScreenShare(object o)
         {
             _timer.Stop();
-            _canvas.Background = Brushes.Transparent;
+            _shareImage.Source = null;
             LabelVisible = Visibility.Visible;
 
             IsScreenCapturing = false;
@@ -152,6 +150,18 @@ namespace WpfAppAITest.ViewModels
             set
             {
                 _labelVisible = value;
+                OnPropertyChanged();
+            }
+        }
+
+        private Visibility _screnshhotLabelVisible = Visibility.Visible; // Default is Visible
+
+        public Visibility ScrenshhotLabelVisible
+        {
+            get => _screnshhotLabelVisible;
+            set
+            {
+                _screnshhotLabelVisible = value;
                 OnPropertyChanged();
             }
         }
@@ -174,23 +184,7 @@ namespace WpfAppAITest.ViewModels
             }
         }
 
-        public static class NativeMethods // Promenili smo iz 'internal' u 'public'
-        {
-            // Za rad sa stilovima prozora
-            public const int GWL_STYLE = -16;
-            public const int WS_CAPTION = 0x00C00000;
-
-            // P/Invoke za GetWindowLong (dohvatanje stila prozora)
-            [DllImport("user32.dll", SetLastError = true)]
-            public static extern int GetWindowLong(IntPtr hWnd, int nIndex);
-
-            // P/Invoke za SetWindowLong (postavljanje stila prozora)
-            [DllImport("user32.dll", SetLastError = true)]
-            public static extern int SetWindowLong(IntPtr hWnd, int nIndex, int dwNewLong);
-        }
-
-
-
+        
         private Point _lineStartPoint;  // Početna tačka linije
         private Point _lineEndPoint;    // Krajna tačka linije
 
@@ -230,7 +224,7 @@ namespace WpfAppAITest.ViewModels
                     Y1 = _lineStartPoint.Y,
                     X2 = _lineEndPoint.X,
                     Y2 = _lineEndPoint.Y,
-                    Stroke = System.Windows.Media.Brushes.Red,
+                    Stroke = Brushes.Red,
                     StrokeThickness = 2
                 };
 
@@ -263,7 +257,7 @@ namespace WpfAppAITest.ViewModels
                     Y1 = _lineStartPoint.Y,
                     X2 = _lineEndPoint.X,
                     Y2 = _lineEndPoint.Y,
-                    Stroke = System.Windows.Media.Brushes.Red,
+                    Stroke = Brushes.Red,
                     StrokeEndLineCap = PenLineCap.Triangle,
                     StrokeThickness = 2
                 };
@@ -308,7 +302,7 @@ namespace WpfAppAITest.ViewModels
             Polygon arrowhead = new Polygon
             {
                 Points = new PointCollection { arrowPoint1, end, arrowPoint2 },
-                Fill = System.Windows.Media.Brushes.Red
+                Fill = Brushes.Red
             };
 
             // Add the arrowhead to the Canvas
@@ -336,7 +330,7 @@ namespace WpfAppAITest.ViewModels
                 {
                     Width = width,
                     Height = height,
-                    Stroke = System.Windows.Media.Brushes.Red,
+                    Stroke = Brushes.Red,
                     StrokeThickness = 2
                 };
 
@@ -360,12 +354,12 @@ namespace WpfAppAITest.ViewModels
             {
                 _isLineDrawing = value;
 
-                if (value == true)
+                if (value)
                 {
                     IsArrowDrawing = false;
                     IsRactangeDrawing = false;
                 }
-                OnPropertyChanged(nameof(IsLineDrawing));
+                OnPropertyChanged();
             }
         }
 
@@ -378,12 +372,12 @@ namespace WpfAppAITest.ViewModels
             {
                 _isArrowDrawing = value;
 
-                if (value == true)
+                if (value)
                 {
                     IsLineDrawing = false;
                     IsRactangeDrawing = false;
                 }
-                OnPropertyChanged(nameof(IsArrowDrawing));
+                OnPropertyChanged();
             }
         }
 
@@ -396,13 +390,13 @@ namespace WpfAppAITest.ViewModels
             {
                 _isRactangeDrawing = value;
 
-                if (value == true)
+                if (value)
                 {
                     IsArrowDrawing = false;
                     IsLineDrawing = false;
                 }
 
-                OnPropertyChanged(nameof(IsRactangeDrawing));
+                OnPropertyChanged();
             }
         }
     }
@@ -413,7 +407,7 @@ namespace WpfAppAITest.ViewModels
         private static extern IntPtr GetDC(IntPtr hWnd);
 
         [DllImport("user32.dll")]
-        private static extern int ReleaseDC(IntPtr hWnd, IntPtr hDC);
+        private static extern int ReleaseDC(IntPtr hWnd, IntPtr hDc);
 
         [DllImport("gdi32.dll")]
         private static extern bool BitBlt(IntPtr hdcDest, int xDest, int yDest, int width, int height,
@@ -435,27 +429,24 @@ namespace WpfAppAITest.ViewModels
         private static extern bool DeleteDC(IntPtr hdc);
 
         [DllImport("user32.dll")]
-        private static extern bool GetWindowRect(IntPtr hWnd, out RECT lpRect);
+        private static extern bool GetClientRect(IntPtr hWnd, out Rect lpRect);
 
         [DllImport("user32.dll")]
-        private static extern bool GetClientRect(IntPtr hWnd, out RECT lpRect);
-
-        [DllImport("user32.dll")]
-        private static extern bool ClientToScreen(IntPtr hWnd, ref POINT lpPoint);
+        private static extern bool ClientToScreen(IntPtr hWnd, ref Point lpPoint);
 
         [StructLayout(LayoutKind.Sequential)]
-        private struct RECT
+        private struct Rect
         {
             public int Left, Top, Right, Bottom;
         }
 
         [StructLayout(LayoutKind.Sequential)]
-        private struct POINT
+        private struct Point
         {
             public int X, Y;
         }
 
-        public Bitmap CaptureWindowClientArea(string processName)
+        public Bitmap? CaptureWindowClientArea(string processName)
         {
             Process[] processes = Process.GetProcessesByName(processName);
             if (processes.Length == 0)
@@ -465,19 +456,19 @@ namespace WpfAppAITest.ViewModels
             if (hWnd == IntPtr.Zero)
                 return null;
 
-            if (!GetClientRect(hWnd, out RECT clientRect))
+            if (!GetClientRect(hWnd, out Rect clientRect))
                 return null;
 
-            POINT clientPoint = new POINT { X = clientRect.Left, Y = clientRect.Top };
+            Point clientPoint = new Point { X = clientRect.Left, Y = clientRect.Top };
             ClientToScreen(hWnd, ref clientPoint);
 
             int width = clientRect.Right - clientRect.Left;
             int height = clientRect.Bottom - clientRect.Top;
 
             IntPtr hdcWindow = GetDC(hWnd);
-            IntPtr hdcMemDC = CreateCompatibleDC(hdcWindow);
+            IntPtr hdcMemDc = CreateCompatibleDC(hdcWindow);
             IntPtr hBitmap = CreateCompatibleBitmap(hdcWindow, width, height);
-            IntPtr hOld = SelectObject(hdcMemDC, hBitmap);
+            IntPtr hOld = SelectObject(hdcMemDc, hBitmap);
 
             //var interopWindow = new WindowInteropHelper(this);
             //IntPtr hwnd = interopWindow.Handle;
@@ -487,25 +478,23 @@ namespace WpfAppAITest.ViewModels
             //var item = await picker.PickSingleItemAsync();
 
             //BitBlt(hdcMemDC, 0, 0, width, height, hdcWindow, clientPoint.X, clientPoint.Y, CopyPixelOperation.SourceCopy);
-            BitBlt(hdcMemDC, 0, 0, width, height, hdcWindow, 0, 0,
+            BitBlt(hdcMemDc, 0, 0, width, height, hdcWindow, 0, 0,
        CopyPixelOperation.SourceCopy | CopyPixelOperation.CaptureBlt);
-            Bitmap bmp = System.Drawing.Image.FromHbitmap(hBitmap);
+            var bmp = Image.FromHbitmap(hBitmap);
 
-            SelectObject(hdcMemDC, hOld);
+            SelectObject(hdcMemDc, hOld);
             DeleteObject(hBitmap);
-            DeleteDC(hdcMemDC);
+            DeleteDC(hdcMemDc);
             ReleaseDC(hWnd, hdcWindow);
 
             return bmp;
         }
         public Bitmap CaptureScreen()
         {
-            var bounds = Screen.AllScreens.LastOrDefault().Bounds;
+            var bounds = Screen.AllScreens.LastOrDefault()!.Bounds;
             var bitmap = new Bitmap(bounds.Width, bounds.Height);
-            using (var g = Graphics.FromImage(bitmap))
-            {
-                g.CopyFromScreen(bounds.Location, System.Drawing.Point.Empty, bounds.Size);
-            }
+            using var g = Graphics.FromImage(bitmap);
+            g.CopyFromScreen(bounds.Location, System.Drawing.Point.Empty, bounds.Size);
             return bitmap;
         }
     }
