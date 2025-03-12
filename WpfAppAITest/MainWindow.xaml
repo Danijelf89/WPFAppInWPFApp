@@ -86,7 +86,7 @@
         <Border Grid.Row="1" Grid.Column="0" BorderBrush="Transparent" BorderThickness="1"  Margin="5" CornerRadius="0" Background="White">
             <Grid>
                 <TextBlock  Text="Please take screenshot!" VerticalAlignment="Center" HorizontalAlignment="Center" Visibility="{Binding ScrenshhotLabelVisible, UpdateSourceTrigger=PropertyChanged}"/>
-                <Canvas  Name="WpfAppCanvas" HorizontalAlignment="Stretch" Background="Transparent" MouseDown="WpfAppCanvas_MouseDown" Margin="0"/>
+                <Canvas  Name="WpfAppCanvas" HorizontalAlignment="Stretch"  MouseDown="WpfAppCanvas_MouseDown" Margin="0"/>
             </Grid>
         </Border>
 

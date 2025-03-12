@@ -7,6 +7,11 @@
     </ApplicationDefinition>
   </ItemGroup>
   <ItemGroup>
+    <Compile Update="Views\ScreenChooserView.xaml.cs">
+      <SubType>Code</SubType>
+    </Compile>
+  </ItemGroup>
+  <ItemGroup>
     <Page Update="LookAndFeel\Icons.xaml">
       <SubType>Designer</SubType>
     </Page>

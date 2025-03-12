@@ -11,6 +11,10 @@ using System.Windows.Media.Imaging;
 using System.Windows.Shapes;
 using System.Windows.Threading;
 using WpfAppAITest.Command;
+using WpfAppAITest.Helpers;
+using WpfAppAITest.Models;
+using WpfAppAITest.Views;
+using Application = System.Windows.Application;
 using Brushes = System.Windows.Media.Brushes;
 using Image = System.Drawing.Image;
 using Line = System.Windows.Shapes.Line;
@@ -100,8 +104,17 @@ namespace WpfAppAITest.ViewModels
 
         private void ShareScreen(object o)
         {
+            var newWindow = new ScreenChooserView();
+            newWindow.Owner = Application.Current.MainWindow;
+            newWindow.ShowDialog();
+
+            if(newWindow.DialogResult == false) return;
+
+            var selectedScreen = (newWindow.DataContext as ScreenChooserViewModel).SelectedScreen;
+
+
             _timer = new DispatcherTimer { Interval = TimeSpan.FromSeconds(1) };
-            _timer.Tick += (_, _) => _shareImage.Source = BitmapToImageSource(_screenCapture.CaptureScreen()); //CaptureWindowClientArea("msedge")
+            _timer.Tick += (_, _) => _shareImage.Source = BitmapToImageSource(_screenCapture.CaptureScreen(selectedScreen)); //CaptureWindowClientArea("msedge")
             _timer.Start();
 
             LabelVisible = Visibility.Collapsed;
@@ -129,8 +142,9 @@ namespace WpfAppAITest.ViewModels
 
         private void TakeScreenshot(object o)
         {
-            _timer.Stop();
+            //_timer.Stop();
             ScrenshhotLabelVisible = Visibility.Collapsed;
+            ScreenShotHelper.CaptureGridAndSetAsBackground(_shareImage, _canvas);
         }
 
         private void StopScreenShare(object o)
@@ -489,12 +503,16 @@ namespace WpfAppAITest.ViewModels
 
             return bmp;
         }
-        public Bitmap CaptureScreen()
+        
+        public Bitmap CaptureScreen(ScreenModel selectedScreenModel)
         {
-            var bounds = Screen.AllScreens.LastOrDefault()!.Bounds;
+            var selectedScreen = selectedScreenModel.Scrren;
+            var bounds = selectedScreen.Bounds;
             var bitmap = new Bitmap(bounds.Width, bounds.Height);
-            using var g = Graphics.FromImage(bitmap);
-            g.CopyFromScreen(bounds.Location, System.Drawing.Point.Empty, bounds.Size);
+            using (var g = Graphics.FromImage(bitmap))
+            {
+                g.CopyFromScreen(bounds.Location, System.Drawing.Point.Empty, bounds.Size);
+            }
             return bitmap;
         }
     }

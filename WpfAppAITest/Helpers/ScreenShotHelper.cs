@@ -8,9 +8,11 @@ using System.Windows.Interop;
 using System.Windows.Media.Imaging;
 using System.Windows.Media;
 using System.Windows;
+using System.Windows.Controls;
 using Application = System.Windows.Application;
 using Point = System.Windows.Point;
 using System.Windows.Forms.Integration;
+using Image = System.Windows.Controls.Image;
 
 
 namespace WpfAppAITest.Helpers
@@ -71,7 +73,7 @@ namespace WpfAppAITest.Helpers
             return bmpSource;
         }
 
-        public static void CaptureGridAndSetAsBackground(WindowsFormsHost source, System.Windows.Controls.Panel target)
+        public static void CaptureGridAndSetAsBackground(Image source, System.Windows.Controls.Panel target)
         {
             // Dobijanje apsolutne pozicije Grid1 na ekranu
             Point screenPos = source.PointToScreen(new Point(0, 0));
@@ -92,6 +94,26 @@ namespace WpfAppAITest.Helpers
 
 
 
+        }
+
+        public static void CaptureImageScreenshot(Image? sharedImage, Canvas canvas)
+        {
+            if (sharedImage?.Source == null)
+                return;
+
+            // Renderuj Image kontrolu u bitmapu
+            RenderTargetBitmap rtb = new RenderTargetBitmap(
+                (int)sharedImage.ActualWidth,
+                (int)sharedImage.ActualHeight,
+                96, 96, PixelFormats.Pbgra32);
+
+            rtb.Render(sharedImage);
+
+            // Kreiraj ImageBrush od RenderTargetBitmap-a
+            ImageBrush brush = new ImageBrush(rtb);
+
+            // Postavi kao pozadinu Canvas-a
+            canvas.Background = brush;
         }
 
 
