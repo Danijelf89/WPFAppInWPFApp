@@ -1,4 +1,5 @@
 ﻿
+using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.Drawing.Imaging;
 using System.Runtime.InteropServices;
@@ -42,6 +43,16 @@ namespace WpfAppAITest.ViewModels
         [DllImport("user32.dll")]
         public static extern int GetWindowText(IntPtr hWnd, StringBuilder lpString, int nMaxCount);
 
+        [DllImport("user32.dll")]
+        private static extern bool IsWindowVisible(IntPtr hWnd);
+        [DllImport("user32.dll")]
+        private static extern bool GetWindowRect(IntPtr hwnd, out RECT lpRect);
+
+        private struct RECT
+        {
+            public int Left, Top, Right, Bottom;
+        }
+
         // Delegate for EnumWindowsProc
         public delegate bool EnumWindowsProc(IntPtr hWnd, IntPtr lParam);
 
@@ -83,11 +94,22 @@ namespace WpfAppAITest.ViewModels
         public MainWindowViewModel(Canvas canvas)
         {
             _canvas = canvas;
+
+            foreach (var window in GetOpenWindows())
+            {
+                var wind = new ShareWindow
+                {
+                    Handle = window.Handle,
+                    Title = window.Title
+                };
+                OpenWindows.Add(wind);
+            }
         }
 
         private DelegateCommand _shareScreenCommand;
         public DelegateCommand ShareScreenCommand => _shareScreenCommand ??=
-            new DelegateCommand(ShareScreen, _ => !ShareScreenCanExecute());
+            new DelegateCommand(obj => ShareScreen((IntPtr)obj), _ => !ShareScreenCanExecute());
+
 
         private DelegateCommand _undoCommand;
         public DelegateCommand UndoCommand => _undoCommand ??=
@@ -102,19 +124,68 @@ namespace WpfAppAITest.ViewModels
         public DelegateCommand DeleteAppCommand => _deleteApp ??=
             new DelegateCommand(StopScreenShare, _ => ShareScreenCanExecute());
 
-        private void ShareScreen(object o)
+
+        public void ShareScreen(IntPtr selectedWindow)
         {
-            _timer = new DispatcherTimer { Interval = TimeSpan.FromSeconds(1) };
-            _timer.Tick += (s, e) => _canvas.Background = new ImageBrush(BitmapToImageSource(_screenCapture.CaptureScreen())); //CaptureWindowClientArea("msedge")
+            if (SelectedWindow.Handle == IntPtr.Zero) return;
+
+            _timer = new DispatcherTimer { Interval = TimeSpan.FromMilliseconds(100) };
+            _timer.Tick += (s, e) => _canvas.Background = new ImageBrush(BitmapToImageSource(_screenCapture.CaptureWindow(SelectedWindow.Handle)));
             _timer.Start();
 
             LabelVisible = Visibility.Collapsed;
-
             IsScreenCapturing = true;
         }
+
         public bool ShareScreenCanExecute() => IsScreenCapturing;
 
+        public static List<(IntPtr Handle, string Title)> GetOpenWindows()
+        {
+            var windows = new List<(IntPtr, string)>();
 
+            EnumWindows((hWnd, lParam) =>
+            {
+                if (IsWindowVisible(hWnd))
+                {
+                    StringBuilder title = new StringBuilder(256);
+                    GetWindowText(hWnd, title, title.Capacity);
+                    if (title.Length > 0)
+                        windows.Add((hWnd, title.ToString()));
+                }
+                return true;
+            }, IntPtr.Zero);
+
+            return windows;
+        }
+        private ObservableCollection<ShareWindow> _openedwindows = new();
+
+        public ObservableCollection<ShareWindow> OpenWindows
+        {
+            get
+            {
+                return _openedwindows;
+            }
+            set
+            {
+                _openedwindows = value;
+                OnPropertyChanged(nameof(OpenWindows));
+            }
+        }
+        private ShareWindow _selectedWindow;
+        public ShareWindow SelectedWindow
+        {
+            get => _selectedWindow;
+            set
+            {
+                _selectedWindow = value;
+                if (value.Handle != null)
+                {
+                    ShareScreen(value.Handle);
+                }
+
+
+            }
+        }
         private BitmapSource BitmapToImageSource(Bitmap bitmap)
         {
             using (var memory = new System.IO.MemoryStream())
@@ -409,95 +480,78 @@ namespace WpfAppAITest.ViewModels
 
     public class ScreenCapture
     {
-        [DllImport("user32.dll")]
-        private static extern IntPtr GetDC(IntPtr hWnd);
+        public Bitmap CaptureWindow(IntPtr hwnd)
+
+        {
+
+            RECT rect;
+
+            if (!DwmGetWindowAttribute(hwnd, DWMWA_EXTENDED_FRAME_BOUNDS, out rect, Marshal.SizeOf(typeof(RECT))))
+
+            {
+
+                GetWindowRect(hwnd, out rect);
+
+            }
+
+            int width = rect.Right - rect.Left;
+
+            int height = rect.Bottom - rect.Top;
+
+            Bitmap bitmap = new Bitmap(width, height);
+
+            using (Graphics gfx = Graphics.FromImage(bitmap))
+
+            {
+
+                IntPtr hdcBitmap = gfx.GetHdc();
+
+                bool success = PrintWindow(hwnd, hdcBitmap, 0);
+
+                gfx.ReleaseHdc(hdcBitmap);
+
+                if (!success)
+
+                {
+
+                    using (Graphics screenGfx = Graphics.FromHwnd(hwnd))
+
+                    {
+
+                        screenGfx.CopyFromScreen(rect.Left, rect.Top, 0, 0, new System.Drawing.Size(width, height));
+
+                    }
+
+                }
+
+            }
+
+            return bitmap;
+
+        }
+
+        private const int DWMWA_EXTENDED_FRAME_BOUNDS = 9;
+
+        [DllImport("dwmapi.dll")]
+
+        private static extern bool DwmGetWindowAttribute(IntPtr hwnd, int dwAttribute, out RECT pvAttribute, int cbAttribute);
 
         [DllImport("user32.dll")]
-        private static extern int ReleaseDC(IntPtr hWnd, IntPtr hDC);
 
-        [DllImport("gdi32.dll")]
-        private static extern bool BitBlt(IntPtr hdcDest, int xDest, int yDest, int width, int height,
-                                          IntPtr hdcSrc, int xSrc, int ySrc, CopyPixelOperation rop);
-
-        [DllImport("gdi32.dll")]
-        private static extern IntPtr CreateCompatibleDC(IntPtr hdc);
-
-        [DllImport("gdi32.dll")]
-        private static extern IntPtr CreateCompatibleBitmap(IntPtr hdc, int width, int height);
-
-        [DllImport("gdi32.dll")]
-        private static extern IntPtr SelectObject(IntPtr hdc, IntPtr h);
-
-        [DllImport("gdi32.dll")]
-        private static extern bool DeleteObject(IntPtr hObject);
-
-        [DllImport("gdi32.dll")]
-        private static extern bool DeleteDC(IntPtr hdc);
+        private static extern bool PrintWindow(IntPtr hwnd, IntPtr hdcBlt, int nFlags);
 
         [DllImport("user32.dll")]
-        private static extern bool GetWindowRect(IntPtr hWnd, out RECT lpRect);
 
-        [DllImport("user32.dll")]
-        private static extern bool GetClientRect(IntPtr hWnd, out RECT lpRect);
+        private static extern bool GetWindowRect(IntPtr hwnd, out RECT lpRect);
 
-        [DllImport("user32.dll")]
-        private static extern bool ClientToScreen(IntPtr hWnd, ref POINT lpPoint);
-
-        [StructLayout(LayoutKind.Sequential)]
         private struct RECT
+
         {
+
             public int Left, Top, Right, Bottom;
+
         }
 
-        [StructLayout(LayoutKind.Sequential)]
-        private struct POINT
-        {
-            public int X, Y;
-        }
-
-        public Bitmap CaptureWindowClientArea(string processName)
-        {
-            Process[] processes = Process.GetProcessesByName(processName);
-            if (processes.Length == 0)
-                return null;
-
-            IntPtr hWnd = processes[0].MainWindowHandle;
-            if (hWnd == IntPtr.Zero)
-                return null;
-
-            if (!GetClientRect(hWnd, out RECT clientRect))
-                return null;
-
-            POINT clientPoint = new POINT { X = clientRect.Left, Y = clientRect.Top };
-            ClientToScreen(hWnd, ref clientPoint);
-
-            int width = clientRect.Right - clientRect.Left;
-            int height = clientRect.Bottom - clientRect.Top;
-
-            IntPtr hdcWindow = GetDC(hWnd);
-            IntPtr hdcMemDC = CreateCompatibleDC(hdcWindow);
-            IntPtr hBitmap = CreateCompatibleBitmap(hdcWindow, width, height);
-            IntPtr hOld = SelectObject(hdcMemDC, hBitmap);
-
-            //var interopWindow = new WindowInteropHelper(this);
-            //IntPtr hwnd = interopWindow.Handle;
-            //var picker = new GraphicsCapturePicker();
-            //var window = picker.As<IInitializeWithWindow>();
-            //window.Initialize(hwnd);
-            //var item = await picker.PickSingleItemAsync();
-
-            //BitBlt(hdcMemDC, 0, 0, width, height, hdcWindow, clientPoint.X, clientPoint.Y, CopyPixelOperation.SourceCopy);
-            BitBlt(hdcMemDC, 0, 0, width, height, hdcWindow, 0, 0,
-       CopyPixelOperation.SourceCopy | CopyPixelOperation.CaptureBlt);
-            Bitmap bmp = System.Drawing.Image.FromHbitmap(hBitmap);
-
-            SelectObject(hdcMemDC, hOld);
-            DeleteObject(hBitmap);
-            DeleteDC(hdcMemDC);
-            ReleaseDC(hWnd, hdcWindow);
-
-            return bmp;
-        }
         public Bitmap CaptureScreen()
         {
             var bounds = Screen.AllScreens.LastOrDefault().Bounds;
@@ -508,5 +562,13 @@ namespace WpfAppAITest.ViewModels
             }
             return bitmap;
         }
+
+    }
+
+    public class ShareWindow
+    {
+        public string Title { get; set; }
+
+        public IntPtr Handle { get; set; }
     }
 }
