@@ -9,7 +9,7 @@
          TextElement.FontWeight="Medium"
          TextElement.FontSize="14"
          FontFamily="pack://application:,,,/MaterialDesignThemes.Wpf;component/Resources/Roboto/#Roboto"        
-        Title="Test AI app" 
+        Title="Documentation builder" 
         WindowState="Normal"
         WindowStartupLocation="CenterScreen"
         ResizeMode="CanResize"
