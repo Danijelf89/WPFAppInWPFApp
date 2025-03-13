@@ -11,6 +11,7 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Shapes;
 using System.Windows.Threading;
+using Microsoft.Extensions.DependencyInjection;
 using WpfAppAITest.Command;
 using WpfAppAITest.Helpers;
 using WpfAppAITest.Models;
@@ -28,6 +29,7 @@ namespace WpfAppAITest.ViewModels
     {
         private  DispatcherTimer _timer;
         private readonly ScreenCapture _screenCapture = new();
+        private readonly IServiceProvider _serviceProvider;
 
         private System.Windows.Controls.Image _shareImage;
 
@@ -78,12 +80,18 @@ namespace WpfAppAITest.ViewModels
             return -1; // Not found
         }
 
-        private readonly Canvas _canvas;
+        private Canvas _canvas;
 
-        public MainWindowViewModel(Canvas canvas, System.Windows.Controls.Image shareImage)
+        public MainWindowViewModel(IServiceProvider serviceProvider)
+        {
+            _serviceProvider = serviceProvider;
+        }
+
+        public void Init(Canvas canvas, System.Windows.Controls.Image shareImage)
         {
             _canvas = canvas;
             _shareImage = shareImage;
+
         }
 
         private DelegateCommand _shareScreenCommand;
@@ -105,13 +113,14 @@ namespace WpfAppAITest.ViewModels
 
         private void ShareScreen(object o)
         {
-            var newWindow = new ScreenChooserView();
-            newWindow.Owner = Application.Current.MainWindow;
-            newWindow.ShowDialog();
+            var screenChooserwindow = _serviceProvider.GetRequiredService<ScreenChooserView>();
+            screenChooserwindow.Owner = Application.Current.MainWindow;
+            screenChooserwindow.ShowDialog();
 
-            if(newWindow.DialogResult == false) return;
+            if(screenChooserwindow.DialogResult == false) return;
 
-            var selectedScreen = (newWindow.DataContext as ScreenChooserViewModel).SelectedScreen;
+            var selectedScreen = (screenChooserwindow.DataContext as ScreenChooserViewModel).SelectedScreen;
+            screenChooserwindow.DataContext = null;
 
 
             _timer = new DispatcherTimer { Interval = TimeSpan.FromSeconds(1) };
