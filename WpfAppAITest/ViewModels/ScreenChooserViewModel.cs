@@ -4,12 +4,14 @@ using System.Collections.ObjectModel;
 using System.Drawing.Imaging;
 using System.IO;
 using System.Linq;
+using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using System.Windows.Media.Imaging;
 using System.Windows.Threading;
 using WpfAppAITest.Command;
+using WpfAppAITest.Helpers;
 using WpfAppAITest.Models;
 using WpfAppAITest.Views;
 
@@ -83,12 +85,15 @@ namespace WpfAppAITest.ViewModels
         private BitmapSource CaptureScreen(Screen screen)
         {
             var bounds = screen.Bounds;
-            using var bitmap = new Bitmap(bounds.Width, bounds.Height);
+            var nativeBounds = ResolutionHelper.GetNativeResolution(screen);
+            using var bitmap = new Bitmap(nativeBounds.Width, nativeBounds.Height);
             using var g = Graphics.FromImage(bitmap);
-            g.CopyFromScreen(bounds.Location, System.Drawing.Point.Empty, bounds.Size);
+            g.CopyFromScreen(bounds.Location, System.Drawing.Point.Empty, nativeBounds);
 
             return ConvertBitmapToImageSource(bitmap);
         }
+
+        
 
         private BitmapSource ConvertBitmapToImageSource(Bitmap bitmap)
         {
