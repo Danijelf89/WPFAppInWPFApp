@@ -86,9 +86,10 @@ namespace WpfAppAITest.ViewModels
         {
             var bounds = screen.Bounds;
             var nativeBounds = ResolutionHelper.GetNativeResolution(screen);
+            var realLocation = ResolutionHelper.GetRealLocation(bounds.Location, nativeBounds);
             using var bitmap = new Bitmap(nativeBounds.Width, nativeBounds.Height);
             using var g = Graphics.FromImage(bitmap);
-            g.CopyFromScreen(bounds.Location, System.Drawing.Point.Empty, nativeBounds);
+            g.CopyFromScreen(realLocation, System.Drawing.Point.Empty, nativeBounds);
 
             return ConvertBitmapToImageSource(bitmap);
         }

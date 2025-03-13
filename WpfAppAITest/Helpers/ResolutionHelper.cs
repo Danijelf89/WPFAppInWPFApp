@@ -22,5 +22,19 @@ namespace WpfAppAITest.Helpers
                 return new Size(nativeWidth, nativeHeight);
             }
         }
+
+        public static Point GetRealLocation(Point boundsFromWindows, Size nativeScreenSize)
+        {
+            var realBounds = boundsFromWindows;
+            if(realBounds.X > nativeScreenSize.Width)
+            {
+                realBounds.X = nativeScreenSize.Width;
+            }
+            if (realBounds.Y > nativeScreenSize.Height)
+            {
+                realBounds.Y = nativeScreenSize.Height;
+            }
+            return realBounds;
+        }
     }
 }

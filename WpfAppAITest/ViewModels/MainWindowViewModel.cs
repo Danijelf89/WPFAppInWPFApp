@@ -511,10 +511,11 @@ namespace WpfAppAITest.ViewModels
             var selectedScreen = selectedScreenModel.Scrren;
             var bounds = selectedScreen.Bounds;
             var nativeBounds = ResolutionHelper.GetNativeResolution(selectedScreen);
+            var realLocation = ResolutionHelper.GetRealLocation(bounds.Location, nativeBounds);
             var bitmap = new Bitmap(nativeBounds.Width, nativeBounds.Height);
             using (var g = Graphics.FromImage(bitmap))
             {
-                g.CopyFromScreen(bounds.Location, System.Drawing.Point.Empty, nativeBounds);
+                g.CopyFromScreen(realLocation, System.Drawing.Point.Empty, nativeBounds);
             }
             return bitmap;
         }
