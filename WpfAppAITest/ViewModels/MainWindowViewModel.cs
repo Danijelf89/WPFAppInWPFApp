@@ -5,6 +5,7 @@ using System.Runtime.InteropServices;
 using System.Text;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Forms;
 using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
@@ -144,7 +145,8 @@ namespace WpfAppAITest.ViewModels
         {
             //_timer.Stop();
             ScrenshhotLabelVisible = Visibility.Collapsed;
-            ScreenShotHelper.CaptureGridAndSetAsBackground(_shareImage, _canvas);
+            _canvas.Background = new ImageBrush(_shareImage.Source);
+            //ScreenShotHelper.CaptureGridAndSetAsBackground(_shareImage, _canvas);
         }
 
         private void StopScreenShare(object o)
