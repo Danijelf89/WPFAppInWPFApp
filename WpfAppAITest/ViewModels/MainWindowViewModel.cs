@@ -14,12 +14,14 @@ using System.Windows.Threading;
 using WpfAppAITest.Command;
 using WpfAppAITest.Helpers;
 using WpfAppAITest.Models;
+using WpfAppAITest.Services;
 using WpfAppAITest.Views;
 using Application = System.Windows.Application;
 using Brushes = System.Windows.Media.Brushes;
 using Image = System.Drawing.Image;
 using Line = System.Windows.Shapes.Line;
 using Point = System.Windows.Point;
+using RichTextBox = System.Windows.Controls.RichTextBox;
 
 
 namespace WpfAppAITest.ViewModels
@@ -28,10 +30,9 @@ namespace WpfAppAITest.ViewModels
     {
         private  DispatcherTimer _timer;
         private readonly ScreenCapture _screenCapture = new();
-
         private System.Windows.Controls.Image _shareImage;
-
-        
+        private readonly TranscriptionService _transcriptionService;
+        private readonly AiProcessingService _aiProcessingService;
         // Import the necessary Windows APIs
         [DllImport("user32.dll", SetLastError = true)]
         public static extern bool EnumWindows(EnumWindowsProc enumProc, IntPtr lParam);
@@ -79,11 +80,15 @@ namespace WpfAppAITest.ViewModels
         }
 
         private readonly Canvas _canvas;
+        private readonly RichTextBox _richTextBox;
 
-        public MainWindowViewModel(Canvas canvas, System.Windows.Controls.Image shareImage)
+        public MainWindowViewModel(Canvas canvas, System.Windows.Controls.Image shareImage, RichTextBox richTextBox)
         {
             _canvas = canvas;
             _shareImage = shareImage;
+            _richTextBox = richTextBox;
+            _transcriptionService = new TranscriptionService();
+            _aiProcessingService = new AiProcessingService();
         }
 
         private DelegateCommand _shareScreenCommand;
@@ -103,6 +108,16 @@ namespace WpfAppAITest.ViewModels
         public DelegateCommand DeleteAppCommand => _deleteApp ??=
             new DelegateCommand(StopScreenShare, _ => ShareScreenCanExecute());
 
+        private DelegateCommand _clearScreenShot;
+        public DelegateCommand CleanScreenShotCommand => _clearScreenShot ??=
+            new DelegateCommand(ClearScreenShot, _ => true);
+
+        private DelegateCommand _recordVoice;
+        public DelegateCommand RecordVoiceCommand => _recordVoice ??=
+            new DelegateCommand(RecordVoice, _ => true);
+
+        private ScreenModel _selectedScreen; // Store selected screen globally
+
         private void ShareScreen(object o)
         {
             var newWindow = new ScreenChooserView();
@@ -111,11 +126,11 @@ namespace WpfAppAITest.ViewModels
 
             if(newWindow.DialogResult == false) return;
 
-            var selectedScreen = (newWindow.DataContext as ScreenChooserViewModel).SelectedScreen;
+            _selectedScreen = (newWindow.DataContext as ScreenChooserViewModel).SelectedScreen;
 
 
             _timer = new DispatcherTimer { Interval = TimeSpan.FromSeconds(1) };
-            _timer.Tick += (_, _) => _shareImage.Source = BitmapToImageSource(_screenCapture.CaptureScreen(selectedScreen)); //CaptureWindowClientArea("msedge")
+            _timer.Tick += OnTimerTick; //CaptureWindowClientArea("msedge")
             _timer.Start();
 
             LabelVisible = Visibility.Collapsed;
@@ -125,6 +140,10 @@ namespace WpfAppAITest.ViewModels
         }
         public bool ShareScreenCanExecute() => IsScreenCapturing;
 
+        private void OnTimerTick(object sender, EventArgs e)
+        {
+            _shareImage.Source = BitmapToImageSource(_screenCapture.CaptureScreen(_selectedScreen));
+        }
 
         private BitmapSource BitmapToImageSource(Bitmap bitmap)
         {
@@ -152,10 +171,48 @@ namespace WpfAppAITest.ViewModels
         private void StopScreenShare(object o)
         {
             _timer.Stop();
+            _timer.Tick -= OnTimerTick;
             _shareImage.Source = null;
             LabelVisible = Visibility.Visible;
 
             IsScreenCapturing = false;
+        }
+
+        private void ClearScreenShot(object o)
+        {
+            _canvas.Background = Brushes.Transparent;
+            ScrenshhotLabelVisible = Visibility.Visible;
+
+            while(_canvas.Children.Count > 0)
+            {
+                _canvas.Children.RemoveAt(_canvas.Children.Count - 1);
+            }
+        }
+        private bool _isRecording;
+        public bool IsRecording
+        {
+            get => _isRecording;
+            set
+            {
+                _isRecording = value;
+                OnPropertyChanged(nameof(IsRecording));
+            }
+        }
+        private async void RecordVoice(object o)
+        {
+            if (!IsRecording)
+            {
+                _transcriptionService.StartRecording();
+                IsRecording = true;
+            }
+            else
+            {
+                IsRecording = false;
+                _transcriptionService.StopRecording();
+                var path = _transcriptionService.GetRecordedFilePath();
+                string transcribedText = await _aiProcessingService.TranscribeAudioAsync(path);
+                _richTextBox.AppendText(transcribedText);
+            }
         }
 
         private Visibility _labelVisible = Visibility.Visible; // Default is Visible

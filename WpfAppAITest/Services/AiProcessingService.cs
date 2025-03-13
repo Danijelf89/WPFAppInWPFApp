@@ -1,12 +1,13 @@
 ﻿using System.Drawing.Imaging;
 using System.IO;
 using System.Net.Http;
+using System.Net.Http.Headers;
 using Xceed.Words.NET;
 using Image = System.Drawing.Image;
 
 namespace WpfAppAITest.Services
 {
-    class AiProcessingService
+    public class AiProcessingService
     {
         private readonly HttpClient _httpClient;
         private const string OpenAIApiKey = "your-api-key";
@@ -18,15 +19,17 @@ namespace WpfAppAITest.Services
 
         public async Task<string> TranscribeAudioAsync(string filePath)
         {
-            byte[] audioBytes = File.ReadAllBytes(filePath);
-            var content = new MultipartFormDataContent
-            {
-                { new ByteArrayContent(audioBytes), "file", "audio.wav" }
-            };
+            using var content = new MultipartFormDataContent();
+            using var fileStream = new FileStream(filePath, FileMode.Open, FileAccess.Read);
+            var streamContent = new StreamContent(fileStream);
+            streamContent.Headers.ContentType = new MediaTypeHeaderValue("audio/wav"); // Adjust if needed
 
-            HttpResponseMessage response = await _httpClient.PostAsync("http://localhost:5000/transcribe/", content);
-            string responseString = await response.Content.ReadAsStringAsync();
-            return responseString;
+            content.Add(streamContent, "audioFile", Path.GetFileName(filePath));
+
+            HttpResponseMessage response = await _httpClient.PostAsync("https://localhost:7190/api/transcribe", content);
+            response.EnsureSuccessStatusCode();
+            var res = await response.Content.ReadAsStringAsync();
+            return res;
         }
 
         private ImageCodecInfo GetEncoder(ImageFormat format)

@@ -60,6 +60,13 @@
                 <Button Style="{DynamicResource MaterialDesignFloatingActionLightButton}"  Width="30" Height="30"  Margin="10"  Command="{Binding UndoCommand}">
                     <materialDesign:PackIcon Kind="UndoVariant" Width="20" Height="20"/>
                 </Button>
+                <Button Style="{DynamicResource MaterialDesignFloatingActionLightButton}" Width="30" Height="30" Command="{Binding CleanScreenShotCommand}"   Margin="10">
+                    <materialDesign:PackIcon Kind="CameraOff" Width="20" Height="20"/>
+                </Button>
+                <Button Style="{DynamicResource MaterialDesignFloatingActionLightButton}" Width="30" Height="30" Command="{Binding RecordVoiceCommand}"   Margin="10">
+                    <materialDesign:PackIcon Width="20" Height="20" 
+                             Kind="{Binding IsRecording, Converter={StaticResource MicrophoneIconConverter}}"/>
+                </Button>
             </ToolBar>
         </Border>
 
@@ -77,9 +84,7 @@
                     <Button Style="{DynamicResource MaterialDesignFloatingActionButton}" Width="30" Height="30" Command="{Binding AddScreenshot}"   Margin="10">
                         <materialDesign:PackIcon Kind="Camera" Width="20" Height="20"/>
                     </Button>
-                    <Button Style="{DynamicResource MaterialDesignFloatingActionButton}" Width="30" Height="30" Command="{Binding ClearScreenshot}"   Margin="10">
-                        <materialDesign:PackIcon Kind="CameraOff" Width="20" Height="20"/>
-                    </Button>
+
                 </ToolBar>
         </Border>
 

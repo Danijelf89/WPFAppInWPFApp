@@ -18,11 +18,10 @@ namespace WpfAppAITest
         public MainWindow()
         {
             InitializeComponent();
-            var dataContext = new MainWindowViewModel(WpfAppCanvas, ScreenImage);
+            var dataContext = new MainWindowViewModel(WpfAppCanvas, ScreenImage, mainRTB);
             DataContext = dataContext;
             //Host.SizeChanged += LeftGrid_SizeChanged;
             Icon = new BitmapImage(PathToAppUri($"/{typeof(App).Namespace};component/logo.jpg"));
-
         }
 
         

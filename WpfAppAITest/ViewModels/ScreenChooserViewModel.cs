@@ -34,9 +34,10 @@ namespace WpfAppAITest.ViewModels
                 Screens.Add(newScreen);
             }
 
-            _timer = new DispatcherTimer { Interval = TimeSpan.FromMilliseconds(500) };
-            _timer.Tick += (s, e) => UpdateScreenshots();
+            _timer = new DispatcherTimer { Interval = TimeSpan.FromSeconds(1) };
+            _timer.Tick += OnTimerTick;
             _timer.Start();
+
 
             if (Screens.Count > 0)
             {
@@ -118,6 +119,7 @@ namespace WpfAppAITest.ViewModels
         {
             ((o as ScreenChooserView)!).DialogResult = true;
             ((o as ScreenChooserView)!).Close();
+            StopSubscriptionOnSelect();
         }
 
         private DelegateCommand _closeWindowCommand;
@@ -128,6 +130,21 @@ namespace WpfAppAITest.ViewModels
         {
             ((o as ScreenChooserView)!).DialogResult = false;
             ((o as ScreenChooserView)!).Close();
+        }
+
+        private void OnTimerTick(object sender, EventArgs e)
+        {
+            UpdateScreenshots();
+        }
+
+        public void StopSubscriptionOnSelect()
+        {
+            if (_timer != null)
+            {
+                _timer.Stop();
+                _timer.Tick -= OnTimerTick;
+                _timer = null;
+            }
         }
     }
 }
