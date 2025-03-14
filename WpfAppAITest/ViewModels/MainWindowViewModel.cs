@@ -11,6 +11,7 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Shapes;
 using System.Windows.Threading;
+using Microsoft.Extensions.DependencyInjection;
 using WpfAppAITest.Command;
 using WpfAppAITest.Helpers;
 using WpfAppAITest.Models;
@@ -30,9 +31,10 @@ namespace WpfAppAITest.ViewModels
     {
         private  DispatcherTimer _timer;
         private readonly ScreenCapture _screenCapture = new();
+        private readonly IServiceProvider _serviceProvider;
         private System.Windows.Controls.Image _shareImage;
-        private readonly TranscriptionService _transcriptionService;
-        private readonly AiProcessingService _aiProcessingService;
+        private  TranscriptionService _transcriptionService;
+        private  AiProcessingService _aiProcessingService;
         // Import the necessary Windows APIs
         [DllImport("user32.dll", SetLastError = true)]
         public static extern bool EnumWindows(EnumWindowsProc enumProc, IntPtr lParam);
@@ -79,16 +81,22 @@ namespace WpfAppAITest.ViewModels
             return -1; // Not found
         }
 
-        private readonly Canvas _canvas;
-        private readonly RichTextBox _richTextBox;
+        private Canvas _canvas;
+        private  RichTextBox _richTextBox;
 
-        public MainWindowViewModel(Canvas canvas, System.Windows.Controls.Image shareImage, RichTextBox richTextBox)
+        public MainWindowViewModel(IServiceProvider serviceProvider)
         {
-            _canvas = canvas;
+            _serviceProvider = serviceProvider;
+            
+        }
+
+        public void Init(Canvas canvas, System.Windows.Controls.Image shareImage, RichTextBox rtb)
+        {
             _shareImage = shareImage;
-            _richTextBox = richTextBox;
-            _transcriptionService = new TranscriptionService();
-            _aiProcessingService = new AiProcessingService();
+            _canvas = canvas;
+            _richTextBox = rtb;
+            _transcriptionService = _serviceProvider.GetRequiredService<TranscriptionService>();
+            _aiProcessingService = _serviceProvider.GetRequiredService<AiProcessingService>();
         }
 
         private DelegateCommand _shareScreenCommand;
@@ -120,13 +128,14 @@ namespace WpfAppAITest.ViewModels
 
         private void ShareScreen(object o)
         {
-            var newWindow = new ScreenChooserView();
-            newWindow.Owner = Application.Current.MainWindow;
-            newWindow.ShowDialog();
+            var screenChooserwindow = _serviceProvider.GetRequiredService<ScreenChooserView>();
+            screenChooserwindow.Owner = Application.Current.MainWindow;
+            screenChooserwindow.ShowDialog();
 
-            if(newWindow.DialogResult == false) return;
+            if(screenChooserwindow.DialogResult == false) return;
 
-            _selectedScreen = (newWindow.DataContext as ScreenChooserViewModel).SelectedScreen;
+            _selectedScreen = (screenChooserwindow.DataContext as ScreenChooserViewModel).SelectedScreen;
+            screenChooserwindow.DataContext = null;
 
 
             _timer = new DispatcherTimer { Interval = TimeSpan.FromSeconds(1) };

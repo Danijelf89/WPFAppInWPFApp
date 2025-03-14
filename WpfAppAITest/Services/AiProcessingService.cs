@@ -2,6 +2,7 @@
 using System.IO;
 using System.Net.Http;
 using System.Net.Http.Headers;
+using WpfAppAITest.Interfaces;
 using Xceed.Words.NET;
 using Image = System.Drawing.Image;
 
@@ -11,25 +12,36 @@ namespace WpfAppAITest.Services
     {
         private readonly HttpClient _httpClient;
         private const string OpenAIApiKey = "your-api-key";
+        private readonly IHttpBuilder _http;
 
-        public AiProcessingService()
+        public AiProcessingService(IHttpBuilder http)
         {
-            _httpClient = new HttpClient();
+            _http = http;
+            //_httpClient = new HttpClient();
         }
 
         public async Task<string> TranscribeAudioAsync(string filePath)
         {
-            using var content = new MultipartFormDataContent();
-            using var fileStream = new FileStream(filePath, FileMode.Open, FileAccess.Read);
-            var streamContent = new StreamContent(fileStream);
-            streamContent.Headers.ContentType = new MediaTypeHeaderValue("audio/wav"); // Adjust if needed
+            try
+            {
+                using var content = new MultipartFormDataContent();
+                using var fileStream = new FileStream(filePath, FileMode.Open, FileAccess.Read);
+                var streamContent = new StreamContent(fileStream);
+                streamContent.Headers.ContentType = new MediaTypeHeaderValue("audio/wav"); // Adjust if needed
 
-            content.Add(streamContent, "audioFile", Path.GetFileName(filePath));
+                content.Add(streamContent, "audioFile", Path.GetFileName(filePath));
 
-            HttpResponseMessage response = await _httpClient.PostAsync("https://localhost:7190/api/transcribe", content);
-            response.EnsureSuccessStatusCode();
-            var res = await response.Content.ReadAsStringAsync();
-            return res;
+                HttpResponseMessage response = await _http.HttpClient.PostAsync("https://localhost:7190/api/transcribe", content);
+                response.EnsureSuccessStatusCode();
+                var res = await response.Content.ReadAsStringAsync();
+                return res;
+            }
+            catch (Exception e)
+            {
+                MessageBox.Show("Converting voice to text failed.");
+                return string.Empty;
+            }
+
         }
 
         private ImageCodecInfo GetEncoder(ImageFormat format)

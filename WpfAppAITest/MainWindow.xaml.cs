@@ -5,6 +5,7 @@ using System.Windows;
 using System.Windows.Input;
 using System.Windows.Media.Imaging;
 using System.Windows.Threading;
+using Microsoft.Extensions.DependencyInjection;
 using WpfAppAITest.ViewModels;
 using Point = System.Drawing.Point;
 
@@ -15,13 +16,19 @@ namespace WpfAppAITest
     /// </summary>
     public partial class MainWindow : Window
     {
-        public MainWindow()
+        private readonly IServiceProvider _serviceProvider;
+
+        public MainWindow(IServiceProvider serviceProvider)
         {
+            _serviceProvider = serviceProvider;
             InitializeComponent();
-            var dataContext = new MainWindowViewModel(WpfAppCanvas, ScreenImage, mainRTB);
-            DataContext = dataContext;
-            //Host.SizeChanged += LeftGrid_SizeChanged;
-            Icon = new BitmapImage(PathToAppUri($"/{typeof(App).Namespace};component/logo.jpg"));
+
+            var mainWindowViewMOdel = _serviceProvider.GetRequiredService<MainWindowViewModel>();
+
+            DataContext = mainWindowViewMOdel;
+            mainWindowViewMOdel.Init(WpfAppCanvas, ScreenImage, mainRTB);
+             //Host.SizeChanged += LeftGrid_SizeChanged;
+             Icon = new BitmapImage(PathToAppUri($"/{typeof(App).Namespace};component/logo.jpg"));
         }
 
         

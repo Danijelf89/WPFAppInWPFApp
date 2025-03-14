@@ -11,6 +11,7 @@ using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Shapes;
+using Microsoft.Extensions.DependencyInjection;
 using WpfAppAITest.ViewModels;
 
 namespace WpfAppAITest.Views
@@ -20,12 +21,15 @@ namespace WpfAppAITest.Views
     /// </summary>
     public partial class ScreenChooserView : Window
     {
-        public ScreenChooserView()
+        private readonly IServiceProvider _serviceProvider;
+
+        public ScreenChooserView(IServiceProvider serviceProvider)
         {
             InitializeComponent();
-
-            var screenCosserVm = new ScreenChooserViewModel();
+            _serviceProvider = serviceProvider;
+            var screenCosserVm = _serviceProvider.GetRequiredService<ScreenChooserViewModel>();
             DataContext = screenCosserVm;
+            
         }
     }
 }
