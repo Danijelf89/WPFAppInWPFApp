@@ -17,10 +17,7 @@ namespace WpfAppAITest.DependancyInjection
             services.AddSingleton<IHttpBuilder,HttpBuilder>();
             services.AddTransient<AiProcessingService>();
             services.AddTransient<TranscriptionService>();
-
-
-
-
+            services.AddSingleton<HealthCheckService>();
         }
-    }
+}
 }

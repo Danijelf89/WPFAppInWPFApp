@@ -22,6 +22,7 @@ namespace WpfAppAITest.ViewModels
     public  class MainWindowViewModel : BaseViewModel
     {
         private  DispatcherTimer _timer;
+        private  DispatcherTimer _timerHealthCheck;
         private readonly IServiceProvider _serviceProvider;
         private System.Windows.Controls.Image _shareImage;
         private  TranscriptionService _transcriptionService;
@@ -32,6 +33,7 @@ namespace WpfAppAITest.ViewModels
         public MainWindowViewModel(IServiceProvider serviceProvider)
         {
             _serviceProvider = serviceProvider;
+            CheckServerConnection();
             
         }
 
@@ -42,6 +44,34 @@ namespace WpfAppAITest.ViewModels
             _richTextBox = rtb;
             _transcriptionService = _serviceProvider.GetRequiredService<TranscriptionService>();
             _aiProcessingService = _serviceProvider.GetRequiredService<AiProcessingService>();
+
+            _timerHealthCheck = new DispatcherTimer
+            {
+                Interval = TimeSpan.FromSeconds(1)
+            };
+            _timerHealthCheck.Tick += async (s, e) => CheckServerConnection();
+            _timerHealthCheck.Start();
+        }
+
+        private async void CheckServerConnection()
+        {
+            var healthCheck = _serviceProvider.GetRequiredService<HealthCheckService>();
+            var response = await healthCheck.CheckIfAlive();
+
+
+            Application.Current.Dispatcher.BeginInvoke(new Action(() =>
+            {
+                if (response)
+                {
+                    IsOnlineVisible = true;
+                    IsOfflineVisible = false;
+                }
+                else
+                {
+                    IsOnlineVisible = false;
+                    IsOfflineVisible = true;
+                }
+            }));
         }
 
         private DelegateCommand _shareScreenCommand;
@@ -132,6 +162,30 @@ namespace WpfAppAITest.ViewModels
                 OnPropertyChanged(nameof(IsRecording));
             }
         }
+
+        private bool _isOnlineVisible;
+        public bool IsOnlineVisible
+        {
+            get => _isOnlineVisible;
+            set
+            {
+                _isOnlineVisible = value;
+                OnPropertyChanged();
+            }
+        }
+
+        private bool _isOfflineVisible;
+        public bool IsOfflineVisible
+        {
+            get => _isOfflineVisible;
+            set
+            {
+                _isOfflineVisible = value;
+                OnPropertyChanged();
+            }
+        }
+
+
         private async void RecordVoice(object o)
         {
             if (!IsRecording)
