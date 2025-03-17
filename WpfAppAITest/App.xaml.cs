@@ -18,16 +18,20 @@ namespace WpfAppAITest
 
         public App()
         {
+            RegisterServices();
+            RegisterSerialog();
+        }
+
+        private void RegisterServices()
+        {
             AppHost = Host.CreateDefaultBuilder()
                 .ConfigureServices((_, services) =>
                 {
                     services.AddSingleton<IServiceProvider>(this);
                     services.InitializeDependencyInjection();
-                    
+
                     ServiceCollection = services;
                 }).Build();
-
-            RegisterSerialog();
         }
 
         private void RegisterSerialog()

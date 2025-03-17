@@ -1,14 +1,7 @@
-﻿
-using System.Diagnostics;
-using System.Drawing.Imaging;
-using System.Runtime.InteropServices;
-using System.Text;
-using System.Windows;
+﻿using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Forms;
 using System.Windows.Input;
 using System.Windows.Media;
-using System.Windows.Media.Imaging;
 using System.Windows.Shapes;
 using System.Windows.Threading;
 using Microsoft.Extensions.DependencyInjection;
@@ -19,7 +12,6 @@ using WpfAppAITest.Services;
 using WpfAppAITest.Views;
 using Application = System.Windows.Application;
 using Brushes = System.Windows.Media.Brushes;
-using Image = System.Drawing.Image;
 using Line = System.Windows.Shapes.Line;
 using Point = System.Windows.Point;
 using RichTextBox = System.Windows.Controls.RichTextBox;
@@ -30,57 +22,10 @@ namespace WpfAppAITest.ViewModels
     public  class MainWindowViewModel : BaseViewModel
     {
         private  DispatcherTimer _timer;
-        private readonly ScreenCapture _screenCapture = new();
         private readonly IServiceProvider _serviceProvider;
         private System.Windows.Controls.Image _shareImage;
         private  TranscriptionService _transcriptionService;
         private  AiProcessingService _aiProcessingService;
-        // Import the necessary Windows APIs
-        [DllImport("user32.dll", SetLastError = true)]
-        public static extern bool EnumWindows(EnumWindowsProc enumProc, IntPtr lParam);
-
-        [DllImport("user32.dll", SetLastError = true)]
-        public static extern uint GetWindowThreadProcessId(IntPtr hWnd, out uint lpdwProcessId);
-
-        [DllImport("user32.dll")]
-        public static extern int GetWindowText(IntPtr hWnd, StringBuilder lpString, int nMaxCount);
-
-        // Delegate for EnumWindowsProc
-        public delegate bool EnumWindowsProc(IntPtr hWnd, IntPtr lParam);
-
-        // Method to find the window by process ID
-        public static IntPtr FindWindowByProcess(int targetProcessId)
-        {
-            IntPtr foundWindowHandle = IntPtr.Zero;
-
-            EnumWindows((hWnd, _) =>
-            {
-                uint processId;
-                GetWindowThreadProcessId(hWnd, out processId);
-
-                // Check if the process ID matches the target process ID
-                if (processId == targetProcessId)
-                {
-                    foundWindowHandle = hWnd;
-                    return false; // Stop the enumeration if we find the window
-                }
-
-                return true; // Continue searching
-            }, IntPtr.Zero);
-
-            return foundWindowHandle;
-        }
-
-        // Method to find a process by name
-        public static int GetProcessIdByName(string processName)
-        {
-            foreach (var process in Process.GetProcessesByName(processName))
-            {
-                return process.Id;
-            }
-            return -1; // Not found
-        }
-
         private Canvas _canvas;
         private  RichTextBox _richTextBox;
 
@@ -143,38 +88,19 @@ namespace WpfAppAITest.ViewModels
             _timer.Start();
 
             LabelVisible = Visibility.Collapsed;
-
-
             IsScreenCapturing = true;
         }
         public bool ShareScreenCanExecute() => IsScreenCapturing;
 
-        private void OnTimerTick(object sender, EventArgs e)
+        private void OnTimerTick(object? sender, EventArgs e)
         {
-            _shareImage.Source = BitmapToImageSource(_screenCapture.CaptureScreen(_selectedScreen));
-        }
-
-        private BitmapSource BitmapToImageSource(Bitmap bitmap)
-        {
-            using (var memory = new System.IO.MemoryStream())
-            {
-                bitmap.Save(memory, ImageFormat.Bmp);
-                memory.Position = 0;
-                var bitmapImage = new BitmapImage();
-                bitmapImage.BeginInit();
-                bitmapImage.StreamSource = memory;
-                bitmapImage.CacheOption = BitmapCacheOption.OnLoad;
-                bitmapImage.EndInit();
-                return bitmapImage;
-            }
+            _shareImage.Source = ScreenCaptureHelper.CaptureScreen(_selectedScreen.Scrren);
         }
 
         private void TakeScreenshot(object o)
         {
-            //_timer.Stop();
             ScrenshhotLabelVisible = Visibility.Collapsed;
             _canvas.Background = new ImageBrush(_shareImage.Source);
-            //ScreenShotHelper.CaptureGridAndSetAsBackground(_shareImage, _canvas);
         }
 
         private void StopScreenShare(object o)
@@ -183,7 +109,6 @@ namespace WpfAppAITest.ViewModels
             _timer.Tick -= OnTimerTick;
             _shareImage.Source = null;
             LabelVisible = Visibility.Visible;
-
             IsScreenCapturing = false;
         }
 
@@ -219,7 +144,7 @@ namespace WpfAppAITest.ViewModels
                 IsRecording = false;
                 _transcriptionService.StopRecording();
                 var path = _transcriptionService.GetRecordedFilePath();
-                string transcribedText = await _aiProcessingService.TranscribeAudioAsync(path);
+                var transcribedText = await _aiProcessingService.TranscribeAudioAsync(path);
                 _richTextBox.AppendText(transcribedText);
             }
         }
@@ -254,15 +179,13 @@ namespace WpfAppAITest.ViewModels
             get => _isScreenCapturing;
             set
             {
-                if (_isScreenCapturing != value)
-                {
-                    _isScreenCapturing = value;
-                    OnPropertyChanged();
+                if (_isScreenCapturing == value) return;
+                _isScreenCapturing = value;
+                OnPropertyChanged();
 
-                    ShareScreenCommand.RaiseCanExecuteChanged();
-                    AddScreenshot.RaiseCanExecuteChanged();
-                    DeleteAppCommand.RaiseCanExecuteChanged();
-                }
+                ShareScreenCommand.RaiseCanExecuteChanged();
+                AddScreenshot.RaiseCanExecuteChanged();
+                DeleteAppCommand.RaiseCanExecuteChanged();
             }
         }
 
@@ -403,12 +326,12 @@ namespace WpfAppAITest.ViewModels
             {
                 _rectEndPoint = e.GetPosition((UIElement)sender);
 
-                int x = (int)Math.Min(_rectStartPoint.X, _rectEndPoint.X);
-                int y = (int)Math.Min(_rectStartPoint.Y, _rectEndPoint.Y);
-                int width = (int)Math.Abs(_rectStartPoint.X - _rectEndPoint.X);
-                int height = (int)Math.Abs(_rectStartPoint.Y - _rectEndPoint.Y);
+                var x = (int)Math.Min(_rectStartPoint.X, _rectEndPoint.X);
+                var y = (int)Math.Min(_rectStartPoint.Y, _rectEndPoint.Y);
+                var width = (int)Math.Abs(_rectStartPoint.X - _rectEndPoint.X);
+                var height = (int)Math.Abs(_rectStartPoint.Y - _rectEndPoint.Y);
 
-                System.Windows.Shapes.Rectangle rect = new System.Windows.Shapes.Rectangle
+                var rect = new System.Windows.Shapes.Rectangle
                 {
                     Width = width,
                     Height = height,
@@ -480,110 +403,6 @@ namespace WpfAppAITest.ViewModels
 
                 OnPropertyChanged();
             }
-        }
-    }
-
-    public class ScreenCapture
-    {
-        [DllImport("user32.dll")]
-        private static extern IntPtr GetDC(IntPtr hWnd);
-
-        [DllImport("user32.dll")]
-        private static extern int ReleaseDC(IntPtr hWnd, IntPtr hDc);
-
-        [DllImport("gdi32.dll")]
-        private static extern bool BitBlt(IntPtr hdcDest, int xDest, int yDest, int width, int height,
-                                          IntPtr hdcSrc, int xSrc, int ySrc, CopyPixelOperation rop);
-
-        [DllImport("gdi32.dll")]
-        private static extern IntPtr CreateCompatibleDC(IntPtr hdc);
-
-        [DllImport("gdi32.dll")]
-        private static extern IntPtr CreateCompatibleBitmap(IntPtr hdc, int width, int height);
-
-        [DllImport("gdi32.dll")]
-        private static extern IntPtr SelectObject(IntPtr hdc, IntPtr h);
-
-        [DllImport("gdi32.dll")]
-        private static extern bool DeleteObject(IntPtr hObject);
-
-        [DllImport("gdi32.dll")]
-        private static extern bool DeleteDC(IntPtr hdc);
-
-        [DllImport("user32.dll")]
-        private static extern bool GetClientRect(IntPtr hWnd, out Rect lpRect);
-
-        [DllImport("user32.dll")]
-        private static extern bool ClientToScreen(IntPtr hWnd, ref Point lpPoint);
-
-        [StructLayout(LayoutKind.Sequential)]
-        private struct Rect
-        {
-            public int Left, Top, Right, Bottom;
-        }
-
-        [StructLayout(LayoutKind.Sequential)]
-        private struct Point
-        {
-            public int X, Y;
-        }
-
-        public Bitmap? CaptureWindowClientArea(string processName)
-        {
-            Process[] processes = Process.GetProcessesByName(processName);
-            if (processes.Length == 0)
-                return null;
-
-            IntPtr hWnd = processes[0].MainWindowHandle;
-            if (hWnd == IntPtr.Zero)
-                return null;
-
-            if (!GetClientRect(hWnd, out Rect clientRect))
-                return null;
-
-            Point clientPoint = new Point { X = clientRect.Left, Y = clientRect.Top };
-            ClientToScreen(hWnd, ref clientPoint);
-
-            int width = clientRect.Right - clientRect.Left;
-            int height = clientRect.Bottom - clientRect.Top;
-
-            IntPtr hdcWindow = GetDC(hWnd);
-            IntPtr hdcMemDc = CreateCompatibleDC(hdcWindow);
-            IntPtr hBitmap = CreateCompatibleBitmap(hdcWindow, width, height);
-            IntPtr hOld = SelectObject(hdcMemDc, hBitmap);
-
-            //var interopWindow = new WindowInteropHelper(this);
-            //IntPtr hwnd = interopWindow.Handle;
-            //var picker = new GraphicsCapturePicker();
-            //var window = picker.As<IInitializeWithWindow>();
-            //window.Initialize(hwnd);
-            //var item = await picker.PickSingleItemAsync();
-
-            //BitBlt(hdcMemDC, 0, 0, width, height, hdcWindow, clientPoint.X, clientPoint.Y, CopyPixelOperation.SourceCopy);
-            BitBlt(hdcMemDc, 0, 0, width, height, hdcWindow, 0, 0,
-       CopyPixelOperation.SourceCopy | CopyPixelOperation.CaptureBlt);
-            var bmp = Image.FromHbitmap(hBitmap);
-
-            SelectObject(hdcMemDc, hOld);
-            DeleteObject(hBitmap);
-            DeleteDC(hdcMemDc);
-            ReleaseDC(hWnd, hdcWindow);
-
-            return bmp;
-        }
-        
-        public Bitmap CaptureScreen(ScreenModel selectedScreenModel)
-        {
-            var selectedScreen = selectedScreenModel.Scrren;
-            var bounds = selectedScreen.Bounds;
-            var nativeBounds = ResolutionHelper.GetNativeResolution(selectedScreen);
-            var realLocation = ResolutionHelper.GetRealLocation(bounds.Location, nativeBounds);
-            var bitmap = new Bitmap(nativeBounds.Width, nativeBounds.Height);
-            using (var g = Graphics.FromImage(bitmap))
-            {
-                g.CopyFromScreen(realLocation, System.Drawing.Point.Empty, nativeBounds);
-            }
-            return bitmap;
         }
     }
 }
