@@ -1,12 +1,9 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
-using Microsoft.VisualBasic.Logging;
-using System.Configuration;
-using System.Data;
 using System.Windows;
-using System.Windows.Forms;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Hosting;
+using Serilog;
 using WpfAppAITest.DependancyInjection;
-using Application = System.Windows.Application;
 
 namespace WpfAppAITest
 {
@@ -29,6 +26,19 @@ namespace WpfAppAITest
                     
                     ServiceCollection = services;
                 }).Build();
+
+            RegisterSerialog();
+        }
+
+        private void RegisterSerialog()
+        {
+            var configuration = new ConfigurationBuilder()
+                .AddJsonFile("serialog.json", optional: false, reloadOnChange: true)
+                .Build();
+
+            Log.Logger = new LoggerConfiguration()
+                .ReadFrom.Configuration(configuration)
+                .CreateLogger();
         }
 
         protected override void OnStartup(StartupEventArgs e)

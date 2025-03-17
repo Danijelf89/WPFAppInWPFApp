@@ -2,6 +2,7 @@
 using System.IO;
 using System.Net.Http;
 using System.Net.Http.Headers;
+using Serilog;
 using WpfAppAITest.Interfaces;
 using Xceed.Words.NET;
 using Image = System.Drawing.Image;
@@ -17,13 +18,14 @@ namespace WpfAppAITest.Services
         public AiProcessingService(IHttpBuilder http)
         {
             _http = http;
-            //_httpClient = new HttpClient();
         }
 
         public async Task<string> TranscribeAudioAsync(string filePath)
         {
             try
             {
+                Log.Information("AiProcessingService - TranscribeAudioAsync: Starting transcription to API.");
+
                 using var content = new MultipartFormDataContent();
                 using var fileStream = new FileStream(filePath, FileMode.Open, FileAccess.Read);
                 var streamContent = new StreamContent(fileStream);
@@ -34,11 +36,15 @@ namespace WpfAppAITest.Services
                 HttpResponseMessage response = await _http.HttpClient.PostAsync("https://localhost:7190/api/transcribe", content);
                 response.EnsureSuccessStatusCode();
                 var res = await response.Content.ReadAsStringAsync();
+
+                Log.Information("AiProcessingService - TranscribeAudioAsync: Transcription to API completed.");
                 return res;
             }
             catch (Exception e)
             {
                 MessageBox.Show("Converting voice to text failed.");
+                Log.Error(
+                    $"AiProcessingService - TranscribeAudioAsync: Transcription to API failed. Reason: {e.Message}.");
                 return string.Empty;
             }
 
