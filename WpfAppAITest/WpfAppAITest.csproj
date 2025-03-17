@@ -18,6 +18,7 @@
     <PackageReference Include="DocX" Version="4.0.25105.5786" />
     <PackageReference Include="FFmpeg.AutoGen" Version="7.0.0" />
     <PackageReference Include="Font.Awesome" Version="5.15.4" />
+    <PackageReference Include="GemBox.Document" Version="2025.3.113" />
     <PackageReference Include="MaterialDesignColors" Version="5.2.1" />
     <PackageReference Include="MaterialDesignThemes" Version="5.2.1" />
     <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="10.0.0-preview.1.25080.5" />

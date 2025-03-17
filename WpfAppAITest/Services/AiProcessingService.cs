@@ -2,13 +2,21 @@
 using System.IO;
 using System.Net.Http;
 using System.Net.Http.Headers;
+using System.Text;
+using System.Text.Json;
 using Serilog;
+using WpfAppAITest.Helpers;
 using WpfAppAITest.Interfaces;
 using Xceed.Words.NET;
 using Image = System.Drawing.Image;
 
 namespace WpfAppAITest.Services
 {
+    public class ContentSection
+    {
+        public string Text { get; set; }
+        public string? Image { get; set; }
+    }
     public class AiProcessingService
     {
         private readonly HttpClient _httpClient;
@@ -67,7 +75,7 @@ namespace WpfAppAITest.Services
                         {
                             ImageCodecInfo jpgEncoder = GetEncoder(ImageFormat.Png);
                             EncoderParameters encoderParameters = new EncoderParameters(1);
-                            encoderParameters.Param[0] = new EncoderParameter(Encoder.Quality, quality);
+                            encoderParameters.Param[0] = new EncoderParameter(System.Drawing.Imaging.Encoder.Quality, quality);
 
                             image.Save(outputStream, jpgEncoder, encoderParameters);
                             return Convert.ToBase64String(outputStream.ToArray());
@@ -82,33 +90,24 @@ namespace WpfAppAITest.Services
             }
         }
 
-        public string GenerateDocxAsync(List<(string text, string base64Image)> contentSections, string title)
+        public async Task<string> GenerateDocxAsync(List<DocxSection> contentSections, string title)
         {
-            string docxPath = "generated_document.docx";
-            using (var doc = DocX.Create(docxPath))
+            var document = new
             {
-                if (!string.IsNullOrEmpty(title))
+                title,
+                content = contentSections.ConvertAll(section => new ContentSection
                 {
-                    doc.InsertParagraph(title).FontSize(18).Bold().Alignment = Xceed.Document.NET.Alignment.center;
-                }
+                    Text = section.Text,
+                    Image = string.IsNullOrEmpty(section.Image) ? null : $"data:image/png;base64,{section.Image}"
+                })
+            };
 
-                foreach (var section in contentSections)
-                {
-                    doc.InsertParagraph(section.text).SpacingAfter(10);
-                    if (!string.IsNullOrEmpty(section.base64Image))
-                    {
-                        byte[] imageData = Convert.FromBase64String(section.base64Image);
-                        using (MemoryStream ms = new MemoryStream(imageData))
-                        {
-                            var image = doc.AddImage(ms);
-                            var picture = image.CreatePicture(300, 300);
-                            doc.InsertParagraph().AppendPicture(picture);
-                        }
-                    }
-                }
-                doc.Save();
-            }
-            return docxPath;
+            var jsonRequest = JsonSerializer.Serialize(document, new JsonSerializerOptions { WriteIndented = true });
+            using var content = new StringContent(jsonRequest, Encoding.UTF8, "application/json");
+            using HttpResponseMessage response = await _http.HttpClient.PostAsync("https://localhost:7190/api/generate-docx", content);
+
+            response.EnsureSuccessStatusCode();
+            return await response.Content.ReadAsStringAsync();
         }
     }
 }

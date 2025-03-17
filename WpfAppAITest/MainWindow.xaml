@@ -16,6 +16,7 @@
         WindowStartupLocation="CenterScreen"
         ResizeMode="CanResize"
         Closing="MainWindow_OnClosing"
+        SizeChanged="Window_SizeChanged"
         >
     <Grid Margin="5">
         <Grid.RowDefinitions>
@@ -222,8 +223,19 @@
             <Border.Effect>
                 <DropShadowEffect Color="Black" BlurRadius="10" ShadowDepth="5" Opacity="0.2"/>
             </Border.Effect>
+            <DocumentViewer Name="documentViewer">
+                <DocumentViewer.Resources>
+                    <!-- Hides the search box-->
+                    <Style TargetType="ContentControl">
+                        <Setter Property="Visibility" Value="Collapsed" />
+                    </Style>
 
-            <TextBlock VerticalAlignment="Center" HorizontalAlignment="Center">Documentation preview</TextBlock>
+                    <!-- Hides the toolbar -->
+                    <Style TargetType="ToolBar">
+                        <Setter Property="Visibility" Value="Collapsed" />
+                    </Style>
+                </DocumentViewer.Resources>
+            </DocumentViewer>
         </Border>
     </Grid>
 </Window>

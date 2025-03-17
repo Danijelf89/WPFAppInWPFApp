@@ -1,4 +1,5 @@
-﻿using System.Windows;
+﻿using System.Text.Json;
+using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Media;
@@ -200,7 +201,21 @@ namespace WpfAppAITest.ViewModels
                 var path = _transcriptionService.GetRecordedFilePath();
                 var transcribedText = await _aiProcessingService.TranscribeAudioAsync(path);
                 _richTextBox.AppendText(transcribedText);
+
+                List<DocxSection> sections = new();
+                sections.Add(new DocxSection
+                {
+                    Text = transcribedText
+                });
+                CreateDocument(sections);
             }
+        }
+        private async void CreateDocument(List<DocxSection> section)
+        {
+            var doc = await _aiProcessingService.GenerateDocxAsync(section, "this is test");
+            var docString = JsonSerializer.Deserialize<DocxResponse>(doc);
+            string base64Docx = docString.docx;
+            DocumentHelper.SaveDocx(base64Docx);
         }
 
         private Visibility _labelVisible = Visibility.Visible; // Default is Visible
@@ -459,4 +474,10 @@ namespace WpfAppAITest.ViewModels
             }
         }
     }
+
+    class DocxResponse
+    {
+        public string docx { get; set; } = string.Empty;
+    }
+
 }
