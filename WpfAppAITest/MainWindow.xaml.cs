@@ -66,18 +66,24 @@ namespace WpfAppAITest
             try
             {
                 _tempXpsPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "tempDocument.docx");
-
-                using (var stream = new FileStream(filePath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite))
+                if (File.Exists(filePath))
                 {
-                    var document = DocumentModel.Load(stream);
+                    using (var stream = new FileStream(filePath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite))
+                    {
+                        var document = DocumentModel.Load(stream);
 
-                    document.Save(_tempXpsPath, SaveOptions.XpsDefault);
+                        document.Save(_tempXpsPath, SaveOptions.XpsDefault);
+                    }
+                }
+                else
+                {
+                    (DataContext as MainWindowViewModel).GenerateDocumentCommand.Execute(null);
                 }
 
-                using (XpsDocument xpsDoc = new XpsDocument(_tempXpsPath, FileAccess.Read))
-                {
-                    documentViewer.Document = xpsDoc.GetFixedDocumentSequence();
-                }
+                    using (XpsDocument xpsDoc = new XpsDocument(_tempXpsPath, FileAccess.Read))
+                    {
+                        documentViewer.Document = xpsDoc.GetFixedDocumentSequence();
+                    }
                 StartWatchingFile(filePath);
             }
             catch (Exception ex)
