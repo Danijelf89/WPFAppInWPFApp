@@ -8,6 +8,7 @@ using System.Text;
 using System.Threading.Tasks;
 using Serilog;
 using WpfAppAITest.Interfaces;
+using static System.Net.WebRequestMethods;
 
 namespace WpfAppAITest.Services
 {
@@ -17,7 +18,7 @@ namespace WpfAppAITest.Services
 
         public HealthCheckService(IHttpBuilder http)
         {
-            _http = http;
+            _http = http ?? throw new ArgumentNullException(nameof(http));
         }
 
         public async Task<bool> CheckIfAlive()
@@ -34,11 +35,8 @@ namespace WpfAppAITest.Services
                     Log.Information("AiProcessingService - CheckIfAlive: Not alive.");
                     return true;
                 }
-                else
-                {
-                    Log.Information("AiProcessingService - CheckIfAlive: Not alive.");
-                    return false;
-                }
+
+                return false;
             }
             catch (Exception e)
             {
