@@ -1,4 +1,7 @@
 ﻿using System.IO;
+using System.Windows.Media.Imaging;
+using System.Windows.Media;
+using System.Windows.Controls;
 
 namespace WpfAppAITest.Helpers
 {
@@ -25,6 +28,28 @@ namespace WpfAppAITest.Helpers
             catch (Exception ex)
             {
                 Console.WriteLine($"Error saving the file: {ex.Message}");
+            }
+        }
+
+        public static string GetCanvasImageBase64(Canvas canvas)
+        {
+            double width = canvas.ActualWidth;
+            double height = canvas.ActualHeight;
+
+            if (width == 0 || height == 0)
+                return null;
+
+            RenderTargetBitmap renderBitmap = new RenderTargetBitmap(
+                (int)width, (int)height, 96, 96, PixelFormats.Pbgra32);
+            renderBitmap.Render(canvas);
+
+            using (MemoryStream stream = new MemoryStream())
+            {
+                PngBitmapEncoder encoder = new PngBitmapEncoder();
+                encoder.Frames.Add(BitmapFrame.Create(renderBitmap));
+                encoder.Save(stream);
+
+                return Convert.ToBase64String(stream.ToArray());
             }
         }
     }

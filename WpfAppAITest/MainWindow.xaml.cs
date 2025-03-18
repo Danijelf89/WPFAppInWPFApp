@@ -33,7 +33,6 @@ namespace WpfAppAITest
 
             DataContext = mainWindowViewMOdel;
             mainWindowViewMOdel.Init(WpfAppCanvas, ScreenImage, mainRTB);
-             //Host.SizeChanged += LeftGrid_SizeChanged;
              Icon = new BitmapImage(PathToAppUri($"/{typeof(App).Namespace};component/logo.jpg"));
 
             LoadDocument(_filePath);
@@ -66,24 +65,19 @@ namespace WpfAppAITest
         {
             try
             {
-                _filePath = filePath;
                 _tempXpsPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "tempDocument.docx");
 
-                // Open document in Read-Only mode
                 using (var stream = new FileStream(filePath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite))
                 {
                     var document = DocumentModel.Load(stream);
 
-                    // Save as XPS to a temporary file
                     document.Save(_tempXpsPath, SaveOptions.XpsDefault);
                 }
 
-                // Load XPS into WPF DocumentViewer
                 using (XpsDocument xpsDoc = new XpsDocument(_tempXpsPath, FileAccess.Read))
                 {
                     documentViewer.Document = xpsDoc.GetFixedDocumentSequence();
                 }
-                // Start watching for file changes
                 StartWatchingFile(filePath);
             }
             catch (Exception ex)
@@ -99,21 +93,24 @@ namespace WpfAppAITest
                 _watcher.Dispose();
             }
 
-            _watcher = new FileSystemWatcher
+            using (var fileStream = new FileStream(filePath, FileMode.OpenOrCreate, FileAccess.ReadWrite, FileShare.ReadWrite))
             {
-                Path = Path.GetDirectoryName(filePath),
-                Filter = Path.GetFileName(filePath),
-                NotifyFilter = NotifyFilters.LastWrite | NotifyFilters.Size
-            };
+                _watcher = new FileSystemWatcher
+                {
+                    Path = Path.GetDirectoryName(filePath),
+                    Filter = Path.GetFileName(filePath),
+                    NotifyFilter = NotifyFilters.LastWrite | NotifyFilters.Size
+                };
 
-            _watcher.Changed += OnDocumentChanged;
-            _watcher.EnableRaisingEvents = true;
+                _watcher.Changed += OnDocumentChanged;
+                _watcher.EnableRaisingEvents = true;
+            }
         }
         private void OnDocumentChanged(object sender, FileSystemEventArgs e)
         {
             Dispatcher.Invoke(() =>
             {
-                LoadDocument(_filePath);  // Reload the document when changed
+                LoadDocument(_filePath); 
             });
         }
     }

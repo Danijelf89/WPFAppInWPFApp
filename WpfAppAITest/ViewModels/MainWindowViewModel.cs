@@ -1,16 +1,24 @@
-﻿using System.Text.Json;
+﻿using System.IO;
+using System.Text;
+using System.Text.Json;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Documents;
+using System.Windows.Forms;
 using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Shapes;
 using System.Windows.Threading;
+using DocumentFormat.OpenXml;
+using DocumentFormat.OpenXml.Packaging;
+using DocumentFormat.OpenXml.Wordprocessing;
 using Microsoft.Extensions.DependencyInjection;
 using WpfAppAITest.Command;
 using WpfAppAITest.Helpers;
 using WpfAppAITest.Models;
 using WpfAppAITest.Services;
 using WpfAppAITest.Views;
+using static System.Windows.Forms.VisualStyles.VisualStyleElement.Tab;
 using Application = System.Windows.Application;
 using Brushes = System.Windows.Media.Brushes;
 using Line = System.Windows.Shapes.Line;
@@ -99,6 +107,12 @@ namespace WpfAppAITest.ViewModels
         private DelegateCommand _recordVoice;
         public DelegateCommand RecordVoiceCommand => _recordVoice ??=
             new DelegateCommand(RecordVoice, _ => true);
+        private DelegateCommand _generateDocument;
+        public DelegateCommand GenerateDocumentCommand => _generateDocument ??=
+            new DelegateCommand(CreateDocument, _ => true);
+        private DelegateCommand _resetDocument;
+        public DelegateCommand ResetDocumentCommand => _resetDocument ??=
+            new DelegateCommand(ResetDocument, _ => true);
 
         private ScreenModel _selectedScreen; // Store selected screen globally
 
@@ -210,15 +224,44 @@ namespace WpfAppAITest.ViewModels
                 CreateDocument(sections);
             }
         }
-        private async void CreateDocument(List<DocxSection> section)
+        private async void CreateDocument(object o)
         {
-            var doc = await _aiProcessingService.GenerateDocxAsync(section, "this is test");
+            List<DocxSection> sectionList = new();
+            string richText;
+            TextRange textRange = new TextRange(_richTextBox.Document.ContentStart, _richTextBox.Document.ContentEnd);
+            using (MemoryStream stream = new MemoryStream())
+            {
+                textRange.Save(stream, System.Windows.DataFormats.Rtf);
+                richText =  Encoding.UTF8.GetString(stream.ToArray());
+            }
+
+            string? imageBase64 = null;
+            if(ScrenshhotLabelVisible == Visibility.Collapsed)
+            imageBase64 = DocumentHelper.GetCanvasImageBase64(_canvas);
+           
+            DocxSection section = new DocxSection
+            {
+                Text = richText,
+                Image = imageBase64
+            };
+            sectionList.Add(section);
+            var doc = await _aiProcessingService.GenerateDocxAsync(sectionList, "this is test");
             var docString = JsonSerializer.Deserialize<DocxResponse>(doc);
             string base64Docx = docString.docx;
             DocumentHelper.SaveDocx(base64Docx);
         }
 
-        private Visibility _labelVisible = Visibility.Visible; // Default is Visible
+        private void ResetDocument(object o)
+        {
+            using (WordprocessingDocument wordDocument = WordprocessingDocument.Create(System.IO.Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "document.docx"), WordprocessingDocumentType.Document))
+            {
+                MainDocumentPart mainPart = wordDocument.AddMainDocumentPart();
+                mainPart.Document = new Document(new DocumentFormat.OpenXml.Wordprocessing.Body());
+                mainPart.Document.Save();
+            }
+        }
+
+        private Visibility _labelVisible = Visibility.Visible; 
 
         public Visibility LabelVisible
         {

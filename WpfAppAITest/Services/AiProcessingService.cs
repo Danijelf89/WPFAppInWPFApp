@@ -92,14 +92,27 @@ namespace WpfAppAITest.Services
 
         public async Task<string> GenerateDocxAsync(List<DocxSection> contentSections, string title)
         {
+            string projectRoot = AppDomain.CurrentDomain.BaseDirectory;
+            string filePath = Path.Combine(projectRoot, "document.docx");
+            string previousDocument = null;
+
+            if (System.IO.File.Exists(filePath))
+            {
+                byte[] existingBytes = await System.IO.File.ReadAllBytesAsync(filePath);
+                previousDocument = Convert.ToBase64String(existingBytes);
+            }
+
+
             var document = new
             {
                 title,
                 content = contentSections.ConvertAll(section => new ContentSection
                 {
                     Text = section.Text,
-                    Image = string.IsNullOrEmpty(section.Image) ? null : $"data:image/png;base64,{section.Image}"
-                })
+                    Image = string.IsNullOrEmpty(section.Image) ? null : $"data:image/png;base64,{section.Image}",
+                    
+                }),
+                previousDocument
             };
 
             var jsonRequest = JsonSerializer.Serialize(document, new JsonSerializerOptions { WriteIndented = true });
