@@ -27,6 +27,7 @@ using Line = System.Windows.Shapes.Line;
 using SystemPath = System.IO.Path;
 using Point = System.Windows.Point;
 using RichTextBox = System.Windows.Controls.RichTextBox;
+using Serilog;
 
 
 namespace WpfAppAITest.ViewModels
@@ -310,7 +311,8 @@ namespace WpfAppAITest.ViewModels
             }
             catch (Exception ex)
             {
-                System.Windows.MessageBox.Show($"Error loading document: {ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                System.Windows.MessageBox.Show("Document loading failed!");
+                Log.Error($"MainWindowViewModel - LoadDocument: Error loading document: {ex.Message}");
             }
         }
 
