@@ -103,7 +103,7 @@
                     <Button Style="{DynamicResource MaterialDesignFloatingActionButton}" Width="30" Height="30" Command="{Binding AddScreenshot}"   Margin="10">
                         <materialDesign:PackIcon Kind="Camera" Width="20" Height="20"/>
                     </Button>
-                    <Button Style="{DynamicResource MaterialDesignFlatButton}" Height="30" Command="{Binding GenerateDocumentCommand}"   Margin="0">
+                    <Button Style="{DynamicResource MaterialDesignRaisedDarkButton}" Height="30" Command="{Binding GenerateDocumentCommand}"   Margin="0">
                         <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
                             <materialDesign:PackIcon Width="20" Height="20" 
                         Kind="FileDocumentAdd" Margin="0,0,5,0"/>
@@ -237,7 +237,7 @@
             <Border.Effect>
                 <DropShadowEffect Color="Black" BlurRadius="10" ShadowDepth="5" Opacity="0.2"/>
             </Border.Effect>
-            <DocumentViewer Name="documentViewer">
+            <DocumentViewer Name="documentViewer" Document="{Binding DocumentData}">
                 <DocumentViewer.Resources>
                     <!-- Hides the search box-->
                     <Style TargetType="ContentControl">

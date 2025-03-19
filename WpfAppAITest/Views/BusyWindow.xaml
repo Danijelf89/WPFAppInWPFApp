@@ -13,11 +13,11 @@
              SizeToContent="WidthAndHeight">
 
     <Grid Background="Transparent">
-        <Border Width="200" Height="200" Background="Transparent" CornerRadius="10">
+        <Border Width="200" Height="110" Background="#80000000" CornerRadius="10">
             <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center">
-                <fa:ImageAwesome Icon="Refresh" Spin="True" Height="48" Width="48" VerticalAlignment="Center" HorizontalAlignment="Center" Foreground="Blue" Margin="5"></fa:ImageAwesome>
+                <fa:ImageAwesome Icon="Refresh" Spin="True" Height="48" Width="48" VerticalAlignment="Center" HorizontalAlignment="Center" Foreground="#00285a" Margin="5"></fa:ImageAwesome>
                 <TextBlock Name="MessageBlock" MaxWidth="200" TextWrapping="Wrap" TextAlignment="Center"
-                           Foreground="Black" 
+                           Foreground="White" 
                            FontSize="16" 
                            FontWeight="Bold"
                            HorizontalAlignment="Center" 

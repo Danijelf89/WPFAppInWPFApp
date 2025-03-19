@@ -21,21 +21,15 @@ namespace WpfAppAITest
     public partial class MainWindow : Window
     {
         private readonly IServiceProvider _serviceProvider;
-        private FileSystemWatcher _watcher;
-        private string _filePath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "document.docx");
-        private string _tempXpsPath;
         public MainWindow(IServiceProvider serviceProvider)
         {
             _serviceProvider = serviceProvider;
             InitializeComponent();
-            ComponentInfo.SetLicense("FREE-LIMITED-KEY");
             var mainWindowViewMOdel = _serviceProvider.GetRequiredService<MainWindowViewModel>();
 
             DataContext = mainWindowViewMOdel;
             mainWindowViewMOdel.Init(WpfAppCanvas, ScreenImage, mainRTB);
              Icon = new BitmapImage(PathToAppUri($"/{typeof(App).Namespace};component/logo.jpg"));
-
-            LoadDocument(_filePath);
         }
 
         
@@ -61,63 +55,6 @@ namespace WpfAppAITest
             documentViewer.FitToWidth();
         }
 
-        public void LoadDocument(string filePath)
-        {
-            try
-            {
-                _tempXpsPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "tempDocument.docx");
-                if (File.Exists(filePath))
-                {
-                    using (var stream = new FileStream(filePath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite))
-                    {
-                        var document = DocumentModel.Load(stream);
-
-                        document.Save(_tempXpsPath, SaveOptions.XpsDefault);
-                    }
-                }
-                else
-                {
-                    (DataContext as MainWindowViewModel).GenerateDocumentCommand.Execute(null);
-                }
-
-                    using (XpsDocument xpsDoc = new XpsDocument(_tempXpsPath, FileAccess.Read))
-                    {
-                        documentViewer.Document = xpsDoc.GetFixedDocumentSequence();
-                    }
-                StartWatchingFile(filePath);
-            }
-            catch (Exception ex)
-            {
-                System.Windows.MessageBox.Show($"Error loading document: {ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
-            }
-        }
-
-        private void StartWatchingFile(string filePath)
-        {
-            if (_watcher != null)
-            {
-                _watcher.Dispose();
-            }
-
-            using (var fileStream = new FileStream(filePath, FileMode.OpenOrCreate, FileAccess.ReadWrite, FileShare.ReadWrite))
-            {
-                _watcher = new FileSystemWatcher
-                {
-                    Path = Path.GetDirectoryName(filePath),
-                    Filter = Path.GetFileName(filePath),
-                    NotifyFilter = NotifyFilters.LastWrite | NotifyFilters.Size
-                };
-
-                _watcher.Changed += OnDocumentChanged;
-                _watcher.EnableRaisingEvents = true;
-            }
-        }
-        private void OnDocumentChanged(object sender, FileSystemEventArgs e)
-        {
-            Dispatcher.Invoke(() =>
-            {
-                LoadDocument(_filePath); 
-            });
-        }
+       
     }
 }

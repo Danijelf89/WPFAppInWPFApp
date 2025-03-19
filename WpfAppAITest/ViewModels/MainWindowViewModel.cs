@@ -9,10 +9,13 @@ using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Shapes;
 using System.Windows.Threading;
+using System.Windows.Xps.Packaging;
 using DocumentFormat.OpenXml;
 using DocumentFormat.OpenXml.Packaging;
 using DocumentFormat.OpenXml.Wordprocessing;
+using GemBox.Document;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.FileSystemGlobbing;
 using WpfAppAITest.Command;
 using WpfAppAITest.Helpers;
 using WpfAppAITest.Interfaces;
@@ -23,6 +26,7 @@ using static System.Windows.Forms.VisualStyles.VisualStyleElement.Tab;
 using Application = System.Windows.Application;
 using Brushes = System.Windows.Media.Brushes;
 using Line = System.Windows.Shapes.Line;
+using SystemPath = System.IO.Path;
 using Point = System.Windows.Point;
 using RichTextBox = System.Windows.Controls.RichTextBox;
 
@@ -40,12 +44,18 @@ namespace WpfAppAITest.ViewModels
         private Canvas _canvas;
         private  RichTextBox _richTextBox;
         //private readonly IBuisyWindow _busyService;
+        //public FixedDocumentSequence _documentData;
+
+        private FileSystemWatcher _watcher;
+        private string _filePath = SystemPath.Combine(AppDomain.CurrentDomain.BaseDirectory, "document.docx");
+        private string _tempXpsPath;
 
         public MainWindowViewModel(IServiceProvider serviceProvider)
         {
             _serviceProvider = serviceProvider;
             CheckServerConnection();
             //_busyService = busyService;
+            ComponentInfo.SetLicense("FREE-LIMITED-KEY");
         }
 
         public void Init(Canvas canvas, System.Windows.Controls.Image shareImage, RichTextBox rtb)
@@ -62,6 +72,8 @@ namespace WpfAppAITest.ViewModels
             };
             _timerHealthCheck.Tick += async (s, e) => CheckServerConnection();
             _timerHealthCheck.Start();
+
+            LoadDocument(_filePath);
         }
 
         private async void CheckServerConnection()
@@ -219,16 +231,23 @@ namespace WpfAppAITest.ViewModels
                 var path = _transcriptionService.GetRecordedFilePath();
                 var transcribedText = await _aiProcessingService.TranscribeAudioAsync(path);
                 _richTextBox.AppendText(transcribedText);
-
-                List<DocxSection> sections = new();
-                sections.Add(new DocxSection
-                {
-                    Text = transcribedText
-                });
-                CreateDocument(sections);
             }
         }
-        private async void CreateDocument(object o)
+
+        private IDocumentPaginatorSource _documentData;
+        public IDocumentPaginatorSource DocumentData
+        {
+            get => _documentData;
+            set
+            {
+                if (_documentData != value)
+                {
+                    _documentData = value;
+                    OnPropertyChanged(nameof(DocumentData)); // Notify UI
+                }
+            }
+        }
+        private async void CreateDocument(object? o)
         {
             using IBusyWindow _busyService = new BusyWindowService();
             await _busyService.ShowAsync("Generating document... Please wait.");
@@ -251,20 +270,84 @@ namespace WpfAppAITest.ViewModels
                 Image = imageBase64
             };
             sectionList.Add(section);
-            var doc = await _aiProcessingService.GenerateDocxAsync(sectionList, "this is test");
+            var doc = await _aiProcessingService.GenerateDocxAsync(sectionList, "Documentation");
             var docString = JsonSerializer.Deserialize<DocxResponse>(doc);
             string base64Docx = docString.docx;
             DocumentHelper.SaveDocx(base64Docx);
         }
-
         private async void ResetDocument(object o)
         {
             using IBusyWindow _busyService = new BusyWindowService();
             await _busyService.ShowAsync("Resetting document... Please wait.");
-            using WordprocessingDocument wordDocument = WordprocessingDocument.Create(System.IO.Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "document.docx"), WordprocessingDocumentType.Document);
-            var mainPart = wordDocument.AddMainDocumentPart();
-            mainPart.Document = new Document(new DocumentFormat.OpenXml.Wordprocessing.Body());
-            mainPart.Document.Save();
+            using (WordprocessingDocument wordDocument = WordprocessingDocument.Create(SystemPath.Combine(AppDomain.CurrentDomain.BaseDirectory, "document.docx"), WordprocessingDocumentType.Document))
+            {
+                MainDocumentPart mainPart = wordDocument.AddMainDocumentPart();
+                mainPart.Document = new Document(new DocumentFormat.OpenXml.Wordprocessing.Body());
+                mainPart.Document.Save();
+            }
+        }
+
+        public void LoadDocument(string filePath)
+        {
+            try
+            {
+                _tempXpsPath = SystemPath.Combine(AppDomain.CurrentDomain.BaseDirectory, "tempDocument.docx");
+                if (File.Exists(filePath))
+                {
+                    using (var stream = new FileStream(filePath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite))
+                    {
+                        var document = DocumentModel.Load(stream);
+
+                        document.Save(_tempXpsPath, SaveOptions.XpsDefault);
+                    }
+                }
+                else
+                {
+                    CreateDocument(null);
+                }
+
+
+                    using (XpsDocument xpsDoc = new XpsDocument(_tempXpsPath, FileAccess.Read))
+                    {
+                        DocumentData = xpsDoc.GetFixedDocumentSequence();
+                    }
+
+                StartWatchingFile(filePath);
+            }
+            catch (Exception ex)
+            {
+                System.Windows.MessageBox.Show($"Error loading document: {ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+
+        private void StartWatchingFile(string filePath)
+        {
+
+            if (_watcher != null)
+            {
+                _watcher.Dispose();
+            }
+
+            using (var fileStream = new FileStream(filePath, FileMode.OpenOrCreate, FileAccess.ReadWrite, FileShare.ReadWrite))
+            {
+                _watcher = new FileSystemWatcher
+                {
+                    Path = SystemPath.GetDirectoryName(filePath),
+                    Filter = SystemPath.GetFileName(filePath),
+                    NotifyFilter = NotifyFilters.LastWrite | NotifyFilters.Size
+                };
+
+                _watcher.Changed += OnDocumentChanged;
+                _watcher.EnableRaisingEvents = true;
+            }
+
+        }
+        private void OnDocumentChanged(object sender, FileSystemEventArgs e)
+        {
+            Application.Current.Dispatcher.Invoke(() =>
+            {
+                LoadDocument(_filePath);
+            });
         }
 
         private Visibility _labelVisible = Visibility.Visible; 
