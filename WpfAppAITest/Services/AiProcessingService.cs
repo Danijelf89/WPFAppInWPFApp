@@ -85,7 +85,7 @@ namespace WpfAppAITest.Services
             }
             catch (Exception ex)
             {
-                Console.WriteLine("Error compressing image: " + ex.Message);
+                Log.Error($"AiProcessingService - CompressImage: Error compressing image: {ex.Message}");
                 return null;
             }
         }
