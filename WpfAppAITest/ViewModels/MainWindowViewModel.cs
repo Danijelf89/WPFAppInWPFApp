@@ -15,14 +15,12 @@ using DocumentFormat.OpenXml.Packaging;
 using DocumentFormat.OpenXml.Wordprocessing;
 using GemBox.Document;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.FileSystemGlobbing;
 using WpfAppAITest.Command;
 using WpfAppAITest.Helpers;
 using WpfAppAITest.Interfaces;
 using WpfAppAITest.Models;
 using WpfAppAITest.Services;
 using WpfAppAITest.Views;
-using static System.Windows.Forms.VisualStyles.VisualStyleElement.Tab;
 using Application = System.Windows.Application;
 using Brushes = System.Windows.Media.Brushes;
 using Line = System.Windows.Shapes.Line;
@@ -43,8 +41,6 @@ namespace WpfAppAITest.ViewModels
         private  AiProcessingService _aiProcessingService;
         private Canvas _canvas;
         private  RichTextBox _richTextBox;
-        //private readonly IBuisyWindow _busyService;
-        //public FixedDocumentSequence _documentData;
 
         private FileSystemWatcher _watcher;
         private string _filePath = SystemPath.Combine(AppDomain.CurrentDomain.BaseDirectory, "document.docx");
@@ -54,8 +50,6 @@ namespace WpfAppAITest.ViewModels
         {
             _serviceProvider = serviceProvider;
             CheckServerConnection();
-            //_busyService = busyService;
-            ComponentInfo.SetLicense("FREE-LIMITED-KEY");
         }
 
         public void Init(Canvas canvas, System.Windows.Controls.Image shareImage, RichTextBox rtb)
@@ -143,7 +137,7 @@ namespace WpfAppAITest.ViewModels
 
 
             _timer = new DispatcherTimer { Interval = TimeSpan.FromSeconds(1) };
-            _timer.Tick += OnTimerTick; //CaptureWindowClientArea("msedge")
+            _timer.Tick += OnTimerTick; 
             _timer.Start();
 
             LabelVisible = Visibility.Collapsed;

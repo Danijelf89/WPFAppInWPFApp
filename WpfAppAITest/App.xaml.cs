@@ -4,6 +4,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Hosting;
 using Serilog;
 using WpfAppAITest.DependancyInjection;
+using GemBox.Document;
 
 namespace WpfAppAITest
 {
@@ -20,6 +21,7 @@ namespace WpfAppAITest
         {
             RegisterServices();
             RegisterSerialog();
+            RegisterLicencies();
         }
 
         private void RegisterServices()
@@ -43,6 +45,11 @@ namespace WpfAppAITest
             Log.Logger = new LoggerConfiguration()
                 .ReadFrom.Configuration(configuration)
                 .CreateLogger();
+        }
+
+        private void RegisterLicencies()
+        {
+            ComponentInfo.SetLicense("FREE-LIMITED-KEY");
         }
 
         protected override void OnStartup(StartupEventArgs e)
