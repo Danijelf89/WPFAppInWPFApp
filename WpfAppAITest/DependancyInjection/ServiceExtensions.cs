@@ -18,6 +18,7 @@ namespace WpfAppAITest.DependancyInjection
             services.AddTransient<AiProcessingService>();
             services.AddTransient<TranscriptionService>();
             services.AddSingleton<HealthCheckService>();
+            services.AddSingleton<IBusyWindow, BusyWindowService>();
         }
 }
 }

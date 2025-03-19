@@ -15,6 +15,7 @@ using DocumentFormat.OpenXml.Wordprocessing;
 using Microsoft.Extensions.DependencyInjection;
 using WpfAppAITest.Command;
 using WpfAppAITest.Helpers;
+using WpfAppAITest.Interfaces;
 using WpfAppAITest.Models;
 using WpfAppAITest.Services;
 using WpfAppAITest.Views;
@@ -38,12 +39,13 @@ namespace WpfAppAITest.ViewModels
         private  AiProcessingService _aiProcessingService;
         private Canvas _canvas;
         private  RichTextBox _richTextBox;
+        //private readonly IBuisyWindow _busyService;
 
         public MainWindowViewModel(IServiceProvider serviceProvider)
         {
             _serviceProvider = serviceProvider;
             CheckServerConnection();
-            
+            //_busyService = busyService;
         }
 
         public void Init(Canvas canvas, System.Windows.Controls.Image shareImage, RichTextBox rtb)
@@ -210,6 +212,8 @@ namespace WpfAppAITest.ViewModels
             }
             else
             {
+                using IBusyWindow _busyService = new BusyWindowService();
+                await _busyService.ShowAsync("Generating text... Please wait.");
                 IsRecording = false;
                 _transcriptionService.StopRecording();
                 var path = _transcriptionService.GetRecordedFilePath();
@@ -226,19 +230,21 @@ namespace WpfAppAITest.ViewModels
         }
         private async void CreateDocument(object o)
         {
+            using IBusyWindow _busyService = new BusyWindowService();
+            await _busyService.ShowAsync("Generating document... Please wait.");
             List<DocxSection> sectionList = new();
             string richText;
             TextRange textRange = new TextRange(_richTextBox.Document.ContentStart, _richTextBox.Document.ContentEnd);
             using (MemoryStream stream = new MemoryStream())
             {
                 textRange.Save(stream, System.Windows.DataFormats.Rtf);
-                richText =  Encoding.UTF8.GetString(stream.ToArray());
+                richText = Encoding.UTF8.GetString(stream.ToArray());
             }
 
             string? imageBase64 = null;
-            if(ScrenshhotLabelVisible == Visibility.Collapsed)
-            imageBase64 = DocumentHelper.GetCanvasImageBase64(_canvas);
-           
+            if (ScrenshhotLabelVisible == Visibility.Collapsed)
+                imageBase64 = DocumentHelper.GetCanvasImageBase64(_canvas);
+
             DocxSection section = new DocxSection
             {
                 Text = richText,
@@ -251,14 +257,14 @@ namespace WpfAppAITest.ViewModels
             DocumentHelper.SaveDocx(base64Docx);
         }
 
-        private void ResetDocument(object o)
+        private async void ResetDocument(object o)
         {
-            using (WordprocessingDocument wordDocument = WordprocessingDocument.Create(System.IO.Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "document.docx"), WordprocessingDocumentType.Document))
-            {
-                MainDocumentPart mainPart = wordDocument.AddMainDocumentPart();
-                mainPart.Document = new Document(new DocumentFormat.OpenXml.Wordprocessing.Body());
-                mainPart.Document.Save();
-            }
+            using IBusyWindow _busyService = new BusyWindowService();
+            await _busyService.ShowAsync("Resetting document... Please wait.");
+            using WordprocessingDocument wordDocument = WordprocessingDocument.Create(System.IO.Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "document.docx"), WordprocessingDocumentType.Document);
+            var mainPart = wordDocument.AddMainDocumentPart();
+            mainPart.Document = new Document(new DocumentFormat.OpenXml.Wordprocessing.Body());
+            mainPart.Document.Save();
         }
 
         private Visibility _labelVisible = Visibility.Visible; 
