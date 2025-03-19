@@ -28,6 +28,7 @@ using SystemPath = System.IO.Path;
 using Point = System.Windows.Point;
 using RichTextBox = System.Windows.Controls.RichTextBox;
 using Serilog;
+using MessageBox = System.Windows.MessageBox;
 
 
 namespace WpfAppAITest.ViewModels
@@ -244,31 +245,41 @@ namespace WpfAppAITest.ViewModels
         }
         private async void CreateDocument(object? o)
         {
-            using IBusyWindow _busyService = new BusyWindowService();
-            await _busyService.ShowAsync("Generating document... Please wait.");
-            List<DocxSection> sectionList = new();
-            string richText;
-            TextRange textRange = new TextRange(_richTextBox.Document.ContentStart, _richTextBox.Document.ContentEnd);
-            using (MemoryStream stream = new MemoryStream())
+            try
             {
-                textRange.Save(stream, System.Windows.DataFormats.Rtf);
-                richText = Encoding.UTF8.GetString(stream.ToArray());
+                using IBusyWindow _busyService = new BusyWindowService();
+                await _busyService.ShowAsync("Generating document... Please wait.");
+                List<DocxSection> sectionList = new();
+                string richText;
+                var textRange = new TextRange(_richTextBox.Document.ContentStart, _richTextBox.Document.ContentEnd);
+                using (var stream = new MemoryStream())
+                {
+                    textRange.Save(stream, System.Windows.DataFormats.Rtf);
+                    richText = Encoding.UTF8.GetString(stream.ToArray());
+                }
+
+                string? imageBase64 = null;
+                if (ScrenshhotLabelVisible == Visibility.Collapsed)
+                    imageBase64 = DocumentHelper.GetCanvasImageBase64(_canvas);
+
+                var section = new DocxSection
+                {
+                    Text = richText,
+                    Image = imageBase64
+                };
+                sectionList.Add(section);
+                var doc = await _aiProcessingService.GenerateDocxAsync(sectionList, "Documentation");
+                var docString = JsonSerializer.Deserialize<DocxResponse>(doc);
+                var base64Docx = docString?.docx;
+                DocumentHelper.SaveDocx(base64Docx);
+            }
+            catch (Exception e)
+            {
+                Log.Error(string.Format("MainViewModel - CreateDocument: Generating document failed. Reason: {0}", e.Message));
+                MessageBox.Show("Generating document failed!");
             }
 
-            string? imageBase64 = null;
-            if (ScrenshhotLabelVisible == Visibility.Collapsed)
-                imageBase64 = DocumentHelper.GetCanvasImageBase64(_canvas);
-
-            DocxSection section = new DocxSection
-            {
-                Text = richText,
-                Image = imageBase64
-            };
-            sectionList.Add(section);
-            var doc = await _aiProcessingService.GenerateDocxAsync(sectionList, "Documentation");
-            var docString = JsonSerializer.Deserialize<DocxResponse>(doc);
-            string base64Docx = docString.docx;
-            DocumentHelper.SaveDocx(base64Docx);
+            
         }
         private async void ResetDocument(object o)
         {
