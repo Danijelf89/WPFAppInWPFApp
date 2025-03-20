@@ -237,8 +237,7 @@ namespace WpfAppAITest.ViewModels
         {
             //var documentationManager = _serviceProvider.GetRequiredService<DocumentationManager>();
 
-            _documentationManager.CreateDocument(_richTextBox.Document.ContentStart,
-                _richTextBox.Document.ContentEnd, ScrenshhotLabelVisible, _canvas);
+            _documentationManager.CreateDocument(_richTextBox, ScrenshhotLabelVisible, _canvas);
 
         }
         private void ResetDocument(object o)
@@ -250,8 +249,7 @@ namespace WpfAppAITest.ViewModels
         public void LoadDocument()
         {
             //var documentationManager = _serviceProvider.GetRequiredService<DocumentationManager>();
-            var result = _documentationManager.LoadDocument( this, _richTextBox.Document.ContentStart,
-                _richTextBox.Document.ContentEnd, ScrenshhotLabelVisible, _canvas);
+            var result = _documentationManager.LoadDocument( this, _richTextBox, ScrenshhotLabelVisible, _canvas);
 
             if (result != null)
             {

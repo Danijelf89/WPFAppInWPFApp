@@ -13,6 +13,7 @@ using WpfAppAITest.Services;
 using WpfAppAITest.ViewModels;
 using GemBox.Document;
 using SystemPath = System.IO.Path;
+using SystemControls = System.Windows.Controls;
 using System.Windows.Xps.Packaging;
 using DocumentFormat.OpenXml.Packaging;
 using DocumentFormat.OpenXml;
@@ -34,7 +35,7 @@ namespace WpfAppAITest.Managers
             _serviceProvider = serviceProvider;
         }
 
-        public async void CreateDocument(TextPointer contentStart, TextPointer contentEnd, Visibility screensHotLabelVisibility, Canvas canvas)
+        public async void CreateDocument(SystemControls.RichTextBox richTextBox, Visibility screensHotLabelVisibility, Canvas canvas)
         {
             try
             {
@@ -43,7 +44,7 @@ namespace WpfAppAITest.Managers
                 await _busyService.ShowAsync("Generating document... Please wait.");
                 List<DocxSection> sectionList = [];
                 string richText;
-                var textRange = new TextRange(contentStart, contentEnd);
+                var textRange = new TextRange(richTextBox.Document.ContentStart, richTextBox.Document.ContentEnd);
                 using (var stream = new MemoryStream())
                 {
                     textRange.Save(stream, System.Windows.DataFormats.Rtf);
@@ -64,16 +65,27 @@ namespace WpfAppAITest.Managers
                 var docString = JsonSerializer.Deserialize<DocxResponse>(doc);
                 var base64Docx = docString?.docx;
                 DocumentHelper.SaveDocx(base64Docx);
+                _mainViewModel.CleanScreenShotCommand.Execute(null);
+                richTextBox.Document.Blocks.Clear();
             }
             catch (Exception e)
             {
-                Log.Error($"MainViewModel - CreateDocument: Generating document failed. Reason: {e.Message}");
-                System.Windows.MessageBox.Show("Generating document failed!");
+                if (e.GetType() == typeof(IOException))
+                {
+                    System.Windows.MessageBox.Show(
+                        "Some other program is using this document. Please close it to continue!", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                }
+                else
+                {
+                    System.Windows.MessageBox.Show("Generating document failed!");
+                }
+
+                Log.Error($"DocumentationManager - CreateDocument: Generating document failed. Reason: {e.Message}");
             }
         }
 
         public IDocumentPaginatorSource? LoadDocument(MainWindowViewModel mainViewModel,
-                    TextPointer contentStart, TextPointer contentEnd, Visibility screensHotLabelVisibility, Canvas canvas)
+                    SystemControls.RichTextBox richTextBox, Visibility screensHotLabelVisibility, Canvas canvas)
         {
             try
             {
@@ -88,7 +100,7 @@ namespace WpfAppAITest.Managers
                 }
                 else
                 {
-                    CreateDocument(contentStart, contentEnd, screensHotLabelVisibility, canvas);
+                    CreateDocument(richTextBox, screensHotLabelVisibility, canvas);
                 }
 
 
@@ -107,18 +119,22 @@ namespace WpfAppAITest.Managers
 
         private void StartWatchingFile()
         {
-            using (new FileStream(_filePath, FileMode.OpenOrCreate, FileAccess.ReadWrite, FileShare.ReadWrite))
+            if (_watcher != null)
             {
-                _watcher = new FileSystemWatcher
-                {
-                    Path = SystemPath.GetDirectoryName(_filePath) ?? string.Empty,
-                    Filter = SystemPath.GetFileName(_filePath),
-                    NotifyFilter = NotifyFilters.LastWrite | NotifyFilters.Size
-                };
-
-                _watcher.Changed += OnDocumentChanged;
-                _watcher.EnableRaisingEvents = true;
+                _watcher.EnableRaisingEvents = false;
+                _watcher.Changed -= OnDocumentChanged;
+                _watcher.Dispose();
             }
+
+            _watcher = new FileSystemWatcher
+            {
+                Path = SystemPath.GetDirectoryName(_filePath) ?? string.Empty,
+                Filter = SystemPath.GetFileName(_filePath),
+                NotifyFilter = NotifyFilters.LastWrite | NotifyFilters.Size | NotifyFilters.FileName | NotifyFilters.CreationTime
+            };
+
+            _watcher.Changed += OnDocumentChanged;
+            _watcher.EnableRaisingEvents = true;
         }
 
         public void OnDocumentChanged(object sender, FileSystemEventArgs e)
@@ -128,12 +144,31 @@ namespace WpfAppAITest.Managers
 
         public async void ResetDocument()
         {
-            using IBusyWindow busyService = new BusyWindowService();
-            await busyService.ShowAsync("Resetting document... Please wait.");
-            using var wordDocument = WordprocessingDocument.Create(SystemPath.Combine(AppDomain.CurrentDomain.BaseDirectory, "document.docx"), WordprocessingDocumentType.Document);
-            var mainPart = wordDocument.AddMainDocumentPart();
-            mainPart.Document = new Document(new Body());
-            mainPart.Document.Save();
+            try
+            {
+                using IBusyWindow busyService = new BusyWindowService();
+                await busyService.ShowAsync("Resetting document... Please wait.");
+                using var wordDocument = WordprocessingDocument.Create(
+                    SystemPath.Combine(AppDomain.CurrentDomain.BaseDirectory, "document.docx"),
+                    WordprocessingDocumentType.Document);
+                var mainPart = wordDocument.AddMainDocumentPart();
+                mainPart.Document = new Document(new Body());
+                mainPart.Document.Save();
+            }
+            catch (Exception e)
+            {
+                if (e.GetType() == typeof(IOException))
+                {
+                    System.Windows.MessageBox.Show(
+                        "Some other program is using this document. Please close it to continue!", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                }
+                else
+                {
+                    System.Windows.MessageBox.Show("Reseing document failed!");
+                }
+                Log.Error($"DocumentationManager - ResetDocument: Reseting document failed. Reason: {e.Message}");
+            }
+
         }
     }
 }
