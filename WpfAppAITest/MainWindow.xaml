@@ -12,11 +12,13 @@
          TextElement.FontSize="14"
          FontFamily="pack://application:,,,/MaterialDesignThemes.Wpf;component/Resources/Roboto/#Roboto"        
         Title="Documentation builder" 
-        WindowState="Normal"
+        WindowState="Maximized"
         WindowStartupLocation="CenterScreen"
         ResizeMode="CanResize"
         Closing="MainWindow_OnClosing"
         SizeChanged="Window_SizeChanged"
+        MinWidth="1500"
+        MinHeight="800"
         >
     <Grid Margin="5">
         <Grid.RowDefinitions>
