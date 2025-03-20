@@ -53,25 +53,22 @@
 
 
                 <ToolBar Background="Transparent" Grid.Column="0">
-                <ToggleButton Style="{DynamicResource MaterialDesignFloatingActionLightButton}" Width="30" Height="30"  Margin="10"  IsChecked="{Binding IsLineDrawing, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}">
+                <ToggleButton Style="{DynamicResource MaterialDesignFloatingActionLightButton}" Width="30" Height="30"  Margin="5"  IsChecked="{Binding IsLineDrawing, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}">
                     <materialDesign:PackIcon Kind="VectorLine" Width="20" Height="20"/>
                 </ToggleButton>
-                <ToggleButton Style="{DynamicResource MaterialDesignFloatingActionLightButton}" Width="30" Height="30"  Margin="10" IsChecked="{Binding IsArrowDrawing, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}">
+                <ToggleButton Style="{DynamicResource MaterialDesignFloatingActionLightButton}" Width="30" Height="30"  Margin="5" IsChecked="{Binding IsArrowDrawing, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}">
                     <materialDesign:PackIcon Kind="ArrowTopRight" Width="20" Height="20"/>
                 </ToggleButton>
-                <ToggleButton Style="{DynamicResource MaterialDesignFloatingActionLightButton}" Width="30" Height="30"   Margin="10" IsChecked="{Binding IsRactangeDrawing, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}">
+                <ToggleButton Style="{DynamicResource MaterialDesignFloatingActionLightButton}" Width="30" Height="30"   Margin="5" IsChecked="{Binding IsRactangeDrawing, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}">
                     <materialDesign:PackIcon Kind="RectangleOutline" Width="20" Height="20"/>
                 </ToggleButton>
-                <ToggleButton Style="{DynamicResource MaterialDesignFloatingActionLightButton}"  Width="30" Height="30"  Margin="10" IsChecked="{Binding IsRactangeDrawing, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}">
-                    <materialDesign:PackIcon Kind="FormatLetterCase" Width="20" Height="20"/>
-                </ToggleButton>
-                <Button Style="{DynamicResource MaterialDesignFloatingActionLightButton}"  Width="30" Height="30"  Margin="10"  Command="{Binding UndoCommand}">
+                <Button Style="{DynamicResource MaterialDesignFloatingActionLightButton}"  Width="30" Height="30"  Margin="5"  Command="{Binding UndoCommand}">
                     <materialDesign:PackIcon Kind="UndoVariant" Width="20" Height="20"/>
                 </Button>
-                <Button Style="{DynamicResource MaterialDesignFloatingActionLightButton}" Width="30" Height="30" Command="{Binding CleanScreenShotCommand}"   Margin="10">
+                <Button Style="{DynamicResource MaterialDesignFloatingActionLightButton}" Width="30" Height="30" Command="{Binding CleanScreenShotCommand}"   Margin="5">
                     <materialDesign:PackIcon Kind="CameraOff" Width="20" Height="20"/>
                 </Button>
-                <Button Style="{DynamicResource MaterialDesignFloatingActionLightButton}" Width="30" Height="30" Command="{Binding RecordVoiceCommand}"   Margin="10">
+                <Button Style="{DynamicResource MaterialDesignFloatingActionLightButton}" Width="30" Height="30" Command="{Binding RecordVoiceCommand}"   Margin="5">
                     <materialDesign:PackIcon Width="20" Height="20" 
                              Kind="{Binding IsRecording, Converter={StaticResource MicrophoneIconConverter}}"/>
                 </Button>
@@ -94,23 +91,23 @@
                     <ColumnDefinition Width="*" />
                 </Grid.ColumnDefinitions>
                 <ToolBar Background="Transparent" Grid.Column="0" >
-                    <Button Style="{DynamicResource MaterialDesignFloatingActionButton}" Width="30" Height="30" Command="{Binding ShareScreenCommand}"  Margin="10">
+                    <Button Style="{DynamicResource MaterialDesignFloatingActionButton}" Width="30" Height="30" Command="{Binding ShareScreenCommand}"  Margin="5">
                         <materialDesign:PackIcon Kind="Play" Width="20" Height="20"/>
                     </Button>
-                    <Button Style="{DynamicResource MaterialDesignFloatingActionButton}" Width="30" Height="30" Command="{Binding DeleteAppCommand}"  Margin="10">
+                    <Button Style="{DynamicResource MaterialDesignFloatingActionButton}" Width="30" Height="30" Command="{Binding DeleteAppCommand}"  Margin="5">
                         <materialDesign:PackIcon Kind="Stop" Width="20" Height="20"/>
                     </Button>
-                    <Button Style="{DynamicResource MaterialDesignFloatingActionButton}" Width="30" Height="30" Command="{Binding AddScreenshot}"   Margin="10">
+                    <Button Style="{DynamicResource MaterialDesignFloatingActionButton}" Width="30" Height="30" Command="{Binding AddScreenshot}"   Margin="5">
                         <materialDesign:PackIcon Kind="Camera" Width="20" Height="20"/>
                     </Button>
-                    <Button Style="{DynamicResource MaterialDesignRaisedDarkButton}" Height="30" Command="{Binding GenerateDocumentCommand}"   Margin="0">
+                    <Button Style="{DynamicResource MaterialDesignRaisedDarkButton}" Height="30" Command="{Binding GenerateDocumentCommand}"   Margin="5">
                         <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
                             <materialDesign:PackIcon Width="20" Height="20" 
                         Kind="FileDocumentAdd" Margin="0,0,5,0"/>
                             <TextBlock Text="Generate Document" VerticalAlignment="Center"/>
                         </StackPanel>
                     </Button>
-                    <Button Style="{DynamicResource MaterialDesignFlatButton}" Height="30" Command="{Binding ResetDocumentCommand}"   Margin="0">
+                    <Button Style="{DynamicResource MaterialDesignRaisedDarkButton}" Height="30" Command="{Binding ResetDocumentCommand}"   Margin="5">
                         <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
                             <materialDesign:PackIcon Width="20" Height="20" 
                         Kind="FileRefresh" Margin="0,0,5,0"/>
