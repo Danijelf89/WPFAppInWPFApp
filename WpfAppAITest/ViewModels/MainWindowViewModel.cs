@@ -239,7 +239,7 @@ namespace WpfAppAITest.ViewModels
             var result = await _documentationManager.CreateDocument(_richTextBox, ScrenshhotLabelVisible, _canvas);
             if (result)
             {
-                CleanScreenShotCommand.Execute(null);
+                ClearScreenShot(null);
                 _richTextBox.Document.Blocks.Clear();
             }
         }
