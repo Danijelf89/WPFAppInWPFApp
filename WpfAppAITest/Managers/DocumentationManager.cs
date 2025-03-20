@@ -35,7 +35,7 @@ namespace WpfAppAITest.Managers
             _serviceProvider = serviceProvider;
         }
 
-        public async void CreateDocument(SystemControls.RichTextBox richTextBox, Visibility screensHotLabelVisibility, Canvas canvas)
+        public async Task<bool> CreateDocument(SystemControls.RichTextBox richTextBox, Visibility screensHotLabelVisibility, Canvas canvas)
         {
             try
             {
@@ -65,8 +65,7 @@ namespace WpfAppAITest.Managers
                 var docString = JsonSerializer.Deserialize<DocxResponse>(doc);
                 var base64Docx = docString?.docx;
                 DocumentHelper.SaveDocx(base64Docx);
-                _mainViewModel.CleanScreenShotCommand.Execute(null);
-                richTextBox.Document.Blocks.Clear();
+                return true;
             }
             catch (Exception e)
             {
@@ -81,10 +80,11 @@ namespace WpfAppAITest.Managers
                 }
 
                 Log.Error($"DocumentationManager - CreateDocument: Generating document failed. Reason: {e.Message}");
+                return false;
             }
         }
 
-        public IDocumentPaginatorSource? LoadDocument(MainWindowViewModel mainViewModel,
+        public async Task<IDocumentPaginatorSource?> LoadDocument(MainWindowViewModel mainViewModel,
                     SystemControls.RichTextBox richTextBox, Visibility screensHotLabelVisibility, Canvas canvas)
         {
             try
@@ -100,7 +100,7 @@ namespace WpfAppAITest.Managers
                 }
                 else
                 {
-                    CreateDocument(richTextBox, screensHotLabelVisibility, canvas);
+                    await CreateDocument(richTextBox, screensHotLabelVisibility, canvas);
                 }
 
 

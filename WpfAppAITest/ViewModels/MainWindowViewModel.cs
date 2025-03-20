@@ -20,6 +20,7 @@ using SystemPath = System.IO.Path;
 using Point = System.Windows.Point;
 using RichTextBox = System.Windows.Controls.RichTextBox;
 using WpfAppAITest.Managers;
+using System.Windows.Forms;
 
 
 namespace WpfAppAITest.ViewModels
@@ -233,12 +234,14 @@ namespace WpfAppAITest.ViewModels
                 }
             }
         }
-        private void CreateDocument(object? o)
+        private async void CreateDocument(object? o)
         {
-            //var documentationManager = _serviceProvider.GetRequiredService<DocumentationManager>();
-
-            _documentationManager.CreateDocument(_richTextBox, ScrenshhotLabelVisible, _canvas);
-
+            var result = await _documentationManager.CreateDocument(_richTextBox, ScrenshhotLabelVisible, _canvas);
+            if (result)
+            {
+                CleanScreenShotCommand.Execute(null);
+                _richTextBox.Document.Blocks.Clear();
+            }
         }
         private void ResetDocument(object o)
         {
@@ -246,10 +249,10 @@ namespace WpfAppAITest.ViewModels
             documentationManager.ResetDocument();
         }
 
-        public void LoadDocument()
+        public async void LoadDocument()
         {
-            //var documentationManager = _serviceProvider.GetRequiredService<DocumentationManager>();
-            var result = _documentationManager.LoadDocument( this, _richTextBox, ScrenshhotLabelVisible, _canvas);
+
+            var result = await _documentationManager.LoadDocument( this, _richTextBox, ScrenshhotLabelVisible, _canvas);
 
             if (result != null)
             {
