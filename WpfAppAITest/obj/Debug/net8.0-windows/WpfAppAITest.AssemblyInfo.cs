@@ -14,7 +14,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("WpfAppAITest")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+a73424c9afeffc1c8a8cfda05b05b0c636a41e6d")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+ffb12f188c3daec8caae8e09448e67e5e53d94eb")]
 [assembly: System.Reflection.AssemblyProductAttribute("WpfAppAITest")]
 [assembly: System.Reflection.AssemblyTitleAttribute("WpfAppAITest")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]
