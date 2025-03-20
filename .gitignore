@@ -364,24 +364,9 @@ MigrationBackup/
 # Fody - auto-generated XML schema
 FodyWeavers.xsd
 
-/ComData.SAS.Client.Wpf/*.orig
-/ComData.SAS.Client.Wpf/lib/Model/netcoreapp3.1/*
-/ComData.SAS.Client.Wpf/lib/Model/netcoreapp3.1/ComData.SAS.Model.dll
-/ComData.SAS.Client.Wpf/lib/Model/net7.0/ComData.SAS.Model.dll
-/ComData.SAS.Client.Wpf/lib/Model/net7.0/ComData.SAS.Client.Domain.dll
 
-ComData.SAS.IIS.API/src/ComData.SAS.SPAWebClient/styles/vendorAndApp.min.css
-ComData.SAS.IIS.API/src//ComData.SAS.SPAWebClient/vendors/vendors.js
-ComData.SAS.IIS.API/src//ComData.SAS.SPAWebClient/app/main-built.js
-ComData.SAS.IIS.API/src//ComData.SAS.SPAWebClient/app/main-built.js.map
-ComData.SAS.IIS.API/src//ComData.SAS.Server/logs/
-ComData.SAS.IIS.API/src//ComData.SAS.NodeJS.GridFS/typings/
-ComData.SAS.IIS.API/src/WebReportApi/packages/
-ComData.SAS.IIS.API/src/ComData.SAS.Identity/identityserver4_log.txt
-ComData.SAS.IIS.API/DLL
-ComData.SAS.IIS.API/libs/DLLs
-ComData.SAS.IIS.API/[Dd]LLs/
-ComData.SAS.IIS.API/netcoreapp3.1/*
-ComData.SAS.IIS.API/libs/DLLs/netcoreapp3.1/ComData.SAS.Entities.dll
-ComData.SAS.IIS.API/libs/DLLs/netcoreapp3.1/ComData.SAS.EntitiesData.dll
-ComData.SAS.IIS.API/libs/DLLs/netcoreapp3.1/ComData.SAS.EntitiesData.runtimeconfig.dev.json
+
+AI_Manual_dotnet_backend/bin
+AI_Manual_dotnet_backend/obj
+.vs
+AI_Manual_dotnet_backend/whisper-models
