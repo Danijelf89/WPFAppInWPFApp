@@ -1,19 +1,11 @@
 ﻿using System.IO;
-using System.Text;
-using System.Text.Json;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Documents;
-using System.Windows.Forms;
 using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Shapes;
 using System.Windows.Threading;
-using System.Windows.Xps.Packaging;
-using DocumentFormat.OpenXml;
-using DocumentFormat.OpenXml.Packaging;
-using DocumentFormat.OpenXml.Wordprocessing;
-using GemBox.Document;
 using Microsoft.Extensions.DependencyInjection;
 using WpfAppAITest.Command;
 using WpfAppAITest.Helpers;
@@ -27,8 +19,7 @@ using Line = System.Windows.Shapes.Line;
 using SystemPath = System.IO.Path;
 using Point = System.Windows.Point;
 using RichTextBox = System.Windows.Controls.RichTextBox;
-using Serilog;
-using MessageBox = System.Windows.MessageBox;
+using WpfAppAITest.Managers;
 
 
 namespace WpfAppAITest.ViewModels
@@ -43,14 +34,13 @@ namespace WpfAppAITest.ViewModels
         private  AiProcessingService _aiProcessingService;
         private Canvas _canvas;
         private  RichTextBox _richTextBox;
+        private DocumentationManager _documentationManager;
 
-        private FileSystemWatcher _watcher;
-        private string _filePath = SystemPath.Combine(AppDomain.CurrentDomain.BaseDirectory, "document.docx");
-        private string _tempXpsPath;
 
-        public MainWindowViewModel(IServiceProvider serviceProvider)
+        public MainWindowViewModel(IServiceProvider serviceProvider, DocumentationManager documentationManager)
         {
             _serviceProvider = serviceProvider;
+            _documentationManager = documentationManager;
             CheckServerConnection();
         }
 
@@ -69,7 +59,7 @@ namespace WpfAppAITest.ViewModels
             _timerHealthCheck.Tick += async (s, e) => CheckServerConnection();
             _timerHealthCheck.Start();
 
-            LoadDocument(_filePath);
+            LoadDocument();
         }
 
         private async void CheckServerConnection()
@@ -239,122 +229,39 @@ namespace WpfAppAITest.ViewModels
                 if (_documentData != value)
                 {
                     _documentData = value;
-                    OnPropertyChanged(nameof(DocumentData)); // Notify UI
+                    OnPropertyChanged();
                 }
             }
         }
-        private async void CreateDocument(object? o)
+        private void CreateDocument(object? o)
         {
-            try
-            {
-                using IBusyWindow _busyService = new BusyWindowService();
-                await _busyService.ShowAsync("Generating document... Please wait.");
-                List<DocxSection> sectionList = new();
-                string richText;
-                var textRange = new TextRange(_richTextBox.Document.ContentStart, _richTextBox.Document.ContentEnd);
-                using (var stream = new MemoryStream())
-                {
-                    textRange.Save(stream, System.Windows.DataFormats.Rtf);
-                    richText = Encoding.UTF8.GetString(stream.ToArray());
-                }
+            //var documentationManager = _serviceProvider.GetRequiredService<DocumentationManager>();
 
-                string? imageBase64 = null;
-                if (ScrenshhotLabelVisible == Visibility.Collapsed)
-                    imageBase64 = DocumentHelper.GetCanvasImageBase64(_canvas);
+            _documentationManager.CreateDocument(_richTextBox.Document.ContentStart,
+                _richTextBox.Document.ContentEnd, ScrenshhotLabelVisible, _canvas);
 
-                var section = new DocxSection
-                {
-                    Text = richText,
-                    Image = imageBase64
-                };
-                sectionList.Add(section);
-                var doc = await _aiProcessingService.GenerateDocxAsync(sectionList, "Documentation");
-                var docString = JsonSerializer.Deserialize<DocxResponse>(doc);
-                var base64Docx = docString?.docx;
-                DocumentHelper.SaveDocx(base64Docx);
-            }
-            catch (Exception e)
-            {
-                Log.Error(string.Format("MainViewModel - CreateDocument: Generating document failed. Reason: {0}", e.Message));
-                MessageBox.Show("Generating document failed!");
-            }
-
-            
         }
-        private async void ResetDocument(object o)
+        private void ResetDocument(object o)
         {
-            using IBusyWindow _busyService = new BusyWindowService();
-            await _busyService.ShowAsync("Resetting document... Please wait.");
-            using (WordprocessingDocument wordDocument = WordprocessingDocument.Create(SystemPath.Combine(AppDomain.CurrentDomain.BaseDirectory, "document.docx"), WordprocessingDocumentType.Document))
+            var documentationManager = _serviceProvider.GetRequiredService<DocumentationManager>();
+            documentationManager.ResetDocument();
+        }
+
+        public void LoadDocument()
+        {
+            //var documentationManager = _serviceProvider.GetRequiredService<DocumentationManager>();
+            var result = _documentationManager.LoadDocument( this, _richTextBox.Document.ContentStart,
+                _richTextBox.Document.ContentEnd, ScrenshhotLabelVisible, _canvas);
+
+            if (result != null)
             {
-                MainDocumentPart mainPart = wordDocument.AddMainDocumentPart();
-                mainPart.Document = new Document(new DocumentFormat.OpenXml.Wordprocessing.Body());
-                mainPart.Document.Save();
+                DocumentData = result;
             }
         }
 
-        public void LoadDocument(string filePath)
+        public void OnDocumentChanged()
         {
-            try
-            {
-                _tempXpsPath = SystemPath.Combine(AppDomain.CurrentDomain.BaseDirectory, "tempDocument.docx");
-                if (File.Exists(filePath))
-                {
-                    using (var stream = new FileStream(filePath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite))
-                    {
-                        var document = DocumentModel.Load(stream);
-
-                        document.Save(_tempXpsPath, SaveOptions.XpsDefault);
-                    }
-                }
-                else
-                {
-                    CreateDocument(null);
-                }
-
-
-                    using (XpsDocument xpsDoc = new XpsDocument(_tempXpsPath, FileAccess.Read))
-                    {
-                        DocumentData = xpsDoc.GetFixedDocumentSequence();
-                    }
-
-                StartWatchingFile(filePath);
-            }
-            catch (Exception ex)
-            {
-                System.Windows.MessageBox.Show("Document loading failed!");
-                Log.Error($"MainWindowViewModel - LoadDocument: Error loading document: {ex.Message}");
-            }
-        }
-
-        private void StartWatchingFile(string filePath)
-        {
-
-            if (_watcher != null)
-            {
-                _watcher.Dispose();
-            }
-
-            using (var fileStream = new FileStream(filePath, FileMode.OpenOrCreate, FileAccess.ReadWrite, FileShare.ReadWrite))
-            {
-                _watcher = new FileSystemWatcher
-                {
-                    Path = SystemPath.GetDirectoryName(filePath),
-                    Filter = SystemPath.GetFileName(filePath),
-                    NotifyFilter = NotifyFilters.LastWrite | NotifyFilters.Size
-                };
-
-                _watcher.Changed += OnDocumentChanged;
-                _watcher.EnableRaisingEvents = true;
-            }
-
-        }
-        private void OnDocumentChanged(object sender, FileSystemEventArgs e)
-        {
-            Application.Current.Dispatcher.Invoke(() =>
-            {
-                LoadDocument(_filePath);
-            });
+            Application.Current.Dispatcher.Invoke(LoadDocument);
         }
 
         private Visibility _labelVisible = Visibility.Visible; 

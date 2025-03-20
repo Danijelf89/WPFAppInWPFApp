@@ -1,5 +1,6 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
 using WpfAppAITest.Interfaces;
+using WpfAppAITest.Managers;
 using WpfAppAITest.Services;
 using WpfAppAITest.ViewModels;
 using WpfAppAITest.Views;
@@ -19,6 +20,9 @@ namespace WpfAppAITest.DependancyInjection
             services.AddTransient<TranscriptionService>();
             services.AddSingleton<HealthCheckService>();
             services.AddSingleton<IBusyWindow, BusyWindowService>();
+            services.AddSingleton<DocumentationManager>();
+
+            
         }
 }
 }
