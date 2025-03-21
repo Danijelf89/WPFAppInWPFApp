@@ -26,8 +26,10 @@ namespace WpfAppAITest.Services
             try
             {
                 Log.Information("AiProcessingService - CheckIfAlive: Starting transcription to API.");
+                
+                using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(0.5));
 
-                HttpResponseMessage response = await _http.HttpClient.GetAsync("https://localhost:7190/api/healthCheck");
+                HttpResponseMessage response = await _http.HttpClient.GetAsync("https://localhost:7190/api/healthCheck", cts.Token);
                 response.EnsureSuccessStatusCode();
 
                 if (response.IsSuccessStatusCode)
